@@ -16,8 +16,8 @@
 //     via /api/config.js para não expor no HTML.
 //     Para começar, coloque direto aqui mesmo.
 // ------------------------------------------------------------
-const SUPABASE_URL      = 'COLE_SUA_SUPABASE_URL_AQUI';
-const SUPABASE_ANON_KEY = 'COLE_SUA_SUPABASE_ANON_KEY_AQUI';
+const SUPABASE_URL      = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
 // Inicializa o cliente (disponível globalmente como `supabase`)
 const { createClient } = window.supabase;
