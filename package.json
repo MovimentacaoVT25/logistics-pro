@@ -1,0 +1,18 @@
+{
+  "name": "logistics-pro",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão Inteligente de Fretes — Supabase + Google Sheets + Vercel",
+  "main": "index.html",
+  "scripts": {
+    "dev":    "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": ["logistics", "frete", "supabase", "vercel", "google-sheets"],
+  "license": "MIT"
+}

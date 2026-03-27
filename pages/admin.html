@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Administração | Logistics Pro</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans','sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased">
+
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+  <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm z-[9998] hidden items-center justify-center">
+    <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 glass shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <a href="/app.html" class="flex items-center gap-3 group">
+            <div class="w-9 h-9 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <span class="font-bold text-slate-900 dark:text-white">Administração</span>
+          </a>
+          <span class="text-slate-300 dark:text-slate-600">/</span>
+          <span class="text-sm text-slate-500">Gestão de Usuários</span>
+        </div>
+        <a href="/app.html" class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Voltar ao Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Aviso de segurança -->
+    <div class="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-3">
+      <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <div>
+        <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Área restrita — Admin (Nível 3)</p>
+        <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Alterações de nível de acesso têm efeito imediato. Tome cuidado ao rebaixar outros administradores.</p>
+      </div>
+    </div>
+
+    <!-- Tabela de usuários -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Usuários cadastrados</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5" id="totalUsuarios">Carregando...</p>
+        </div>
+        <button onclick="carregarUsuarios()"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Atualizar
+        </button>
+      </div>
+
+      <!-- Busca -->
+      <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-700">
+        <input type="text" id="buscaUsuario" placeholder="Buscar por nome ou email..."
+          class="w-full max-w-sm px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+          oninput="filtrarUsuarios(this.value)"/>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Usuário</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Nível atual</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cadastrado em</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Alterar nível</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaUsuarios" class="divide-y divide-slate-100 dark:divide-slate-700">
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                <div class="animate-pulse">Carregando usuários...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Configurações do sistema -->
+    <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Configurações do Sistema</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Parâmetros globais do Logistics Pro</p>
+      </div>
+      <div id="configLista" class="p-6 space-y-4">
+        <div class="animate-pulse text-slate-400 text-sm">Carregando configurações...</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/permissions.js"></script>
+  <script>
+    let _todosUsuarios = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = await requireAuth();
+      if (!session) return;
+
+      // Verificar se é Admin
+      if (getUserNivel() < 3) {
+        showToast('Acesso negado. Esta página é exclusiva para Admin (nível 3).', 'error');
+        setTimeout(() => window.location.href = '/app.html', 2000);
+        return;
+      }
+
+      await carregarUsuarios();
+      await carregarConfiguracoes();
+    });
+
+    async function carregarUsuarios() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (error) {
+        showToast('Erro ao carregar usuários: ' + error.message, 'error');
+        return;
+      }
+
+      _todosUsuarios = data || [];
+      document.getElementById('totalUsuarios').textContent = `${_todosUsuarios.length} usuário(s) cadastrado(s)`;
+      _renderizarTabela(_todosUsuarios);
+    }
+
+    function filtrarUsuarios(termo) {
+      const t = termo.toLowerCase();
+      const filtrados = _todosUsuarios.filter(u =>
+        u.nome?.toLowerCase().includes(t) ||
+        u.email?.toLowerCase().includes(t)
+      );
+      _renderizarTabela(filtrados);
+    }
+
+    function _renderizarTabela(usuarios) {
+      const tbody = document.getElementById('tabelaUsuarios');
+      const meId  = getCurrentUser()?.id;
+
+      if (usuarios.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">Nenhum usuário encontrado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = usuarios.map(u => {
+        const ehEuMesmo = u.id === meId;
+        const criado    = new Date(u.criado_em).toLocaleDateString('pt-BR');
+
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${ehEuMesmo ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  ${(u.nome || u.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white">${u.nome || '—'}</p>
+                  ${ehEuMesmo ? '<span class="text-xs text-primary-600 dark:text-primary-400">(você)</span>' : ''}
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">${u.email}</td>
+            <td class="px-6 py-4">${getBadgeNivel(u.nivel)}</td>
+            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs">${criado}</td>
+            <td class="px-6 py-4">
+              ${ehEuMesmo
+                ? '<span class="text-xs text-slate-400">Não pode alterar a si mesmo</span>'
+                : `<select
+                    onchange="alterarNivel('${u.id}', this.value, this)"
+                    class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  >
+                    <option value="0" ${u.nivel===0?'selected':''}>0 — Visualizador</option>
+                    <option value="1" ${u.nivel===1?'selected':''}>1 — Solicitante</option>
+                    <option value="2" ${u.nivel===2?'selected':''}>2 — Gestor</option>
+                    <option value="3" ${u.nivel===3?'selected':''}>3 — Admin</option>
+                  </select>`
+              }
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    async function alterarNivel(userId, novoNivel, selectEl) {
+      const nivelNum = parseInt(novoNivel);
+      const nivelNome = { 0:'Visualizador', 1:'Solicitante', 2:'Gestor', 3:'Admin' }[nivelNum];
+
+      if (!confirm(`Tem certeza que deseja alterar este usuário para ${nivelNome} (nível ${nivelNum})?`)) {
+        // Recarregar para desfazer a seleção visual
+        await carregarUsuarios();
+        return;
+      }
+
+      selectEl.disabled = true;
+
+      const { data, error } = await supabase.rpc('set_user_nivel', {
+        target_id:  userId,
+        novo_nivel: nivelNum
+      });
+
+      selectEl.disabled = false;
+
+      if (error) {
+        showToast('Erro ao alterar nível: ' + error.message, 'error');
+        await carregarUsuarios();
+        return;
+      }
+
+      showToast(`Nível alterado para ${nivelNome} com sucesso!`, 'success');
+      await carregarUsuarios();
+    }
+
+    async function carregarConfiguracoes() {
+      const { data, error } = await supabase.from('configuracoes').select('*').order('chave');
+      if (error) return;
+
+      const container = document.getElementById('configLista');
+      container.innerHTML = data.map(c => `
+        <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/30">
+          <div class="min-w-0">
+            <p class="font-medium text-slate-900 dark:text-white text-sm">${c.chave}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${c.descricao || ''}</p>
+          </div>
+          <input
+            type="text"
+            value="${c.valor}"
+            data-chave="${c.chave}"
+            class="w-32 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 text-right"
+            onchange="salvarConfig('${c.chave}', this.value, this)"
+          />
+        </div>`).join('');
+    }
+
+    async function salvarConfig(chave, valor, inputEl) {
+      inputEl.disabled = true;
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({ valor, atualizado_em: new Date().toISOString(), atualizado_por: getCurrentUser().id })
+        .eq('chave', chave);
+
+      inputEl.disabled = false;
+
+      if (error) {
+        showToast('Erro ao salvar configuração.', 'error');
+        return;
+      }
+      showToast(`Configuração "${chave}" salva!`, 'success');
+    }
+  </script>
+</body>
+</html>
