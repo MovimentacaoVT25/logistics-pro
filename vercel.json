@@ -1,33 +1,12 @@
 {
   "version": 2,
-  "name": "logistics-pro",
+  "name": "fretes-vt25",
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/js/(.*)",  "dest": "/js/$1"  },
     { "src": "/pages/(.*)", "dest": "/pages/$1" },
     { "src": "/(.*)\\.html", "dest": "/$1.html" },
-    { "src": "/",         "dest": "/index.html" }
-  ],
-  "env": {
-    "SUPABASE_URL":               "@supabase_url",
-    "SUPABASE_ANON_KEY":          "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY":  "@supabase_service_role_key",
-    "SPREADSHEET_ID":             "@spreadsheet_id",
-    "SHEET_NAME":                 "@sheet_name",
-    "SHEET_RANGE":                "@sheet_range",
-    "GOOGLE_SERVICE_ACCOUNT_JSON":"@google_service_account_json",
-    "SYNC_SECRET":                "@sync_secret"
-  },
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options",        "value": "DENY" },
-        { "key": "X-XSS-Protection",       "value": "1; mode=block" },
-        { "key": "Referrer-Policy",         "value": "strict-origin-when-cross-origin" }
-      ]
-    }
+    { "src": "/", "dest": "/index.html" }
   ]
 }
