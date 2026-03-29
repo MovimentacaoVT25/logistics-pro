@@ -377,7 +377,8 @@
       auth: { 
         persistSession: true, 
         detectSessionInUrl: false, 
-        redirectTo: window.location.origin + '/callback.html' 
+        redirectTo: window.location.origin + '/callback.html',
+        autoRefreshToken: true
       }
     });
 
@@ -482,7 +483,7 @@
       }
     });
 
-    // CADASTRO
+    // CADASTRO - CORRIGIDO
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       hideMessages();
@@ -509,15 +510,9 @@
       }
 
       btn.disabled = true;
-      btn.textContent = 'Verificando...';
+      btn.textContent = 'Cadastrando...';
 
       try {
-        // Verificar se o email já existe
-        const { data: existingUser } = await authClient.rpc('check_email_exists', { email_to_check: email });
-        
-        // Se não existir a função RPC, tentar criar conta diretamente
-        btn.textContent = 'Cadastrando...';
-        
         const { data, error } = await authClient.auth.signUp({
           email,
           password,
@@ -528,17 +523,30 @@
         });
         
         if (error) {
-          if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+          // Tratamento específico de erros
+          if (error.message.includes('User already registered') || 
+              error.message.includes('already registered') ||
+              error.message.includes('already been registered') ||
+              error.status === 422) {
             throw new Error('Este e-mail já está cadastrado. Faça login ou recupere sua senha.');
           }
           throw error;
+        }
+        
+        // Verificar se o usuário foi criado ou já existia
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          // Email já existe mas o Supabase não retornou erro
+          showError('Este e-mail já está cadastrado. Faça login ou recupere sua senha.');
+          btn.disabled = false;
+          btn.textContent = 'Cadastrar';
+          return;
         }
         
         showSuccess('Cadastro realizado! Redirecionando...');
         setTimeout(() => { window.location.href = '/app.html'; }, 2000);
       } catch (error) {
         console.error('Erro no cadastro:', error);
-        showError(error.message || 'Erro ao criar conta. Este e-mail pode já estar cadastrado.');
+        showError(error.message || 'Erro ao criar conta. Tente novamente.');
         btn.disabled = false;
         btn.textContent = 'Cadastrar';
       }
@@ -564,16 +572,10 @@
       e.preventDefault();
       hideMessages();
       
-      // Ocultar tabs
       document.getElementById('tabButtons').style.display = 'none';
-      
-      // Ocultar outros conteúdos
       tabContents.forEach(c => c.classList.remove('active'));
-      
-      // Mostrar formulário de recuperação
       document.getElementById('tab-forgot').classList.add('active');
       
-      // Preencher email se estiver no campo de login
       const loginEmail = document.getElementById('loginEmail').value.trim();
       if (loginEmail) {
         document.getElementById('forgotEmail').value = loginEmail;
@@ -585,10 +587,7 @@
       e.preventDefault();
       hideMessages();
       
-      // Mostrar tabs novamente
       document.getElementById('tabButtons').style.display = 'flex';
-      
-      // Voltar para tab de login
       tabButtons.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
       tabButtons[0].classList.add('active');
