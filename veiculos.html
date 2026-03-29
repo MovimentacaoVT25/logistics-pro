@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veículos - Logistics Pro</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            primary: {
+              50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9',
+              600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 font-sans antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Logistics Pro</h1>
+            <p class="text-xs text-slate-500">Gestão de Veículos</p>
+          </div>
+        </div>
+        <a href="/app.html" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm font-medium">
+          ← Voltar ao Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 mb-2">🚛 Gerenciar Veículos</h2>
+      <p class="text-slate-600">Cadastre e gerencie os veículos da sua frota</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Total</p>
+            <p class="text-2xl font-bold text-slate-900" id="totalVeiculos">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Disponíveis</p>
+            <p class="text-2xl font-bold text-green-600" id="totalDisponiveis">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Em Uso</p>
+            <p class="text-2xl font-bold text-amber-600" id="totalEmUso">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Manutenção</p>
+            <p class="text-2xl font-bold text-red-600" id="totalManutencao">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mb-6 flex gap-4">
+      <button onclick="abrirModalNovoVeiculo()" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold shadow-lg transition-all">
+        + Adicionar Veículo
+      </button>
+      <div class="flex-1 max-w-md">
+        <input type="text" id="searchVeiculo" placeholder="Buscar por placa, modelo..." 
+               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+               oninput="filtrarVeiculos()">
+      </div>
+    </div>
+
+    <!-- Veículos List -->
+    <div id="veiculosContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Carregando... -->
+      <div class="col-span-full text-center py-12">
+        <div class="inline-block w-8 h-8 border-4 border-slate-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-slate-500">Carregando veículos...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Novo Veículo -->
+  <div id="modalNovoVeiculo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-slate-200">
+        <h3 class="text-2xl font-bold text-slate-900">Adicionar Novo Veículo</h3>
+      </div>
+      
+      <form id="formNovoVeiculo" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Placa *</label>
+            <input type="text" id="placa" required maxlength="7" placeholder="ABC1234"
+                   class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Modelo *</label>
+            <input type="text" id="modelo" required placeholder="Ex: Scania R450"
+                   class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Tipo *</label>
+            <select id="tipo" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+              <option value="">Selecione...</option>
+              <option value="Caminhão">Caminhão</option>
+              <option value="Carreta">Carreta</option>
+              <option value="Van">Van</option>
+              <option value="Utilitário">Utilitário</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Ano</label>
+            <input type="number" id="ano" min="1990" max="2030" placeholder="2024"
+                   class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Motorista Responsável</label>
+            <input type="text" id="motorista" placeholder="Nome do motorista"
+                   class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Status *</label>
+            <select id="status" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+              <option value="disponivel">Disponível</option>
+              <option value="em_uso">Em Uso</option>
+              <option value="manutencao">Manutenção</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Observações</label>
+          <textarea id="observacoes" rows="3" placeholder="Informações adicionais..."
+                    class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="submit" class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold">
+            Salvar Veículo
+          </button>
+          <button type="button" onclick="fecharModalNovoVeiculo()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let todosVeiculos = [];
+
+    // Verificar autenticação
+    async function checkAuth() {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session) {
+        window.location.href = '/login.html';
+        return;
+      }
+      currentUser = session.user;
+      carregarVeiculos();
+    }
+
+    // Carregar veículos
+    async function carregarVeiculos() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('veiculos')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        todosVeiculos = data || [];
+        atualizarStats();
+        renderizarVeiculos();
+      } catch (error) {
+        console.error('Erro ao carregar veículos:', error);
+        document.getElementById('veiculosContainer').innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <p class="text-red-600">Erro ao carregar veículos: ${error.message}</p>
+            <p class="text-sm text-slate-500 mt-2">A tabela 'veiculos' pode não existir ainda.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Atualizar estatísticas
+    function atualizarStats() {
+      const total = todosVeiculos.length;
+      const disponiveis = todosVeiculos.filter(v => v.status === 'disponivel').length;
+      const emUso = todosVeiculos.filter(v => v.status === 'em_uso').length;
+      const manutencao = todosVeiculos.filter(v => v.status === 'manutencao').length;
+
+      document.getElementById('totalVeiculos').textContent = total;
+      document.getElementById('totalDisponiveis').textContent = disponiveis;
+      document.getElementById('totalEmUso').textContent = emUso;
+      document.getElementById('totalManutencao').textContent = manutencao;
+    }
+
+    // Renderizar veículos
+    function renderizarVeiculos() {
+      const container = document.getElementById('veiculosContainer');
+      
+      if (todosVeiculos.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Nenhum veículo cadastrado</h3>
+            <p class="text-slate-500">Adicione seu primeiro veículo para começar</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = todosVeiculos.map(veiculo => `
+        <div class="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">${veiculo.placa}</h3>
+              <p class="text-sm text-slate-500">${veiculo.modelo}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(veiculo.status)}">
+              ${getStatusLabel(veiculo.status)}
+            </span>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Tipo:</span>
+              <span class="font-medium text-slate-900">${veiculo.tipo}</span>
+            </div>
+            ${veiculo.ano ? `
+            <div class="flex justify-between">
+              <span class="text-slate-500">Ano:</span>
+              <span class="font-medium text-slate-900">${veiculo.ano}</span>
+            </div>
+            ` : ''}
+            ${veiculo.motorista ? `
+            <div class="flex justify-between">
+              <span class="text-slate-500">Motorista:</span>
+              <span class="font-medium text-slate-900">${veiculo.motorista}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-200 flex gap-2">
+            <button onclick="editarVeiculo('${veiculo.id}')" class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">
+              Editar
+            </button>
+            <button onclick="excluirVeiculo('${veiculo.id}')" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium">
+              Excluir
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Filtrar veículos
+    function filtrarVeiculos() {
+      const busca = document.getElementById('searchVeiculo').value.toLowerCase();
+      const container = document.getElementById('veiculosContainer');
+      
+      const filtrados = todosVeiculos.filter(v => 
+        v.placa.toLowerCase().includes(busca) ||
+        v.modelo.toLowerCase().includes(busca) ||
+        (v.motorista && v.motorista.toLowerCase().includes(busca))
+      );
+
+      if (filtrados.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500">Nenhum veículo encontrado</div>';
+        return;
+      }
+
+      container.innerHTML = filtrados.map(veiculo => `
+        <div class="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">${veiculo.placa}</h3>
+              <p class="text-sm text-slate-500">${veiculo.modelo}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(veiculo.status)}">
+              ${getStatusLabel(veiculo.status)}
+            </span>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Tipo:</span>
+              <span class="font-medium text-slate-900">${veiculo.tipo}</span>
+            </div>
+            ${veiculo.ano ? `
+            <div class="flex justify-between">
+              <span class="text-slate-500">Ano:</span>
+              <span class="font-medium text-slate-900">${veiculo.ano}</span>
+            </div>
+            ` : ''}
+            ${veiculo.motorista ? `
+            <div class="flex justify-between">
+              <span class="text-slate-500">Motorista:</span>
+              <span class="font-medium text-slate-900">${veiculo.motorista}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-200 flex gap-2">
+            <button onclick="editarVeiculo('${veiculo.id}')" class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">
+              Editar
+            </button>
+            <button onclick="excluirVeiculo('${veiculo.id}')" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium">
+              Excluir
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal
+    function abrirModalNovoVeiculo() {
+      document.getElementById('modalNovoVeiculo').classList.remove('hidden');
+    }
+
+    function fecharModalNovoVeiculo() {
+      document.getElementById('modalNovoVeiculo').classList.add('hidden');
+      document.getElementById('formNovoVeiculo').reset();
+    }
+
+    // Form submit
+    document.getElementById('formNovoVeiculo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const dados = {
+        placa: document.getElementById('placa').value.toUpperCase(),
+        modelo: document.getElementById('modelo').value,
+        tipo: document.getElementById('tipo').value,
+        ano: document.getElementById('ano').value || null,
+        motorista: document.getElementById('motorista').value || null,
+        status: document.getElementById('status').value,
+        observacoes: document.getElementById('observacoes').value || null,
+        user_id: currentUser.id
+      };
+
+      try {
+        const { error } = await supabaseClient
+          .from('veiculos')
+          .insert([dados]);
+
+        if (error) throw error;
+
+        alert('Veículo adicionado com sucesso!');
+        fecharModalNovoVeiculo();
+        carregarVeiculos();
+      } catch (error) {
+        console.error('Erro ao adicionar veículo:', error);
+        alert('Erro ao adicionar veículo: ' + error.message);
+      }
+    });
+
+    // Funções auxiliares
+    function getStatusLabel(status) {
+      const labels = {
+        'disponivel': 'Disponível',
+        'em_uso': 'Em Uso',
+        'manutencao': 'Manutenção'
+      };
+      return labels[status] || status;
+    }
+
+    function getStatusClass(status) {
+      const classes = {
+        'disponivel': 'bg-green-100 text-green-700',
+        'em_uso': 'bg-amber-100 text-amber-700',
+        'manutencao': 'bg-red-100 text-red-700'
+      };
+      return classes[status] || 'bg-slate-100 text-slate-700';
+    }
+
+    function editarVeiculo(id) {
+      alert('Funcionalidade de edição em desenvolvimento!');
+    }
+
+    async function excluirVeiculo(id) {
+      if (!confirm('Deseja realmente excluir este veículo?')) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('veiculos')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        alert('Veículo excluído com sucesso!');
+        carregarVeiculos();
+      } catch (error) {
+        console.error('Erro ao excluir veículo:', error);
+        alert('Erro ao excluir veículo: ' + error.message);
+      }
+    }
+
+    // Inicializar
+    checkAuth();
+  </script>
+</body>
+</html>

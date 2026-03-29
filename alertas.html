@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alertas - Logistics Pro</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            primary: {
+              50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9',
+              600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 font-sans antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Logistics Pro</h1>
+            <p class="text-xs text-slate-500">Central de Notificações</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="marcarTodasComoLidas()" class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">
+            Marcar todas como lidas
+          </button>
+          <a href="/app.html" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm font-medium">
+            ← Voltar
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 mb-2">🔔 Alertas e Notificações</h2>
+      <p class="text-slate-600">Fique por dentro de todas as atualizações do sistema</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Não Lidas</p>
+            <p class="text-2xl font-bold text-red-600" id="totalNaoLidas">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Hoje</p>
+            <p class="text-2xl font-bold text-blue-600" id="totalHoje">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500">Total</p>
+            <p class="text-2xl font-bold text-slate-900" id="totalAlertas">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="mb-6 flex gap-3">
+      <select id="filtroTipo" onchange="filtrarAlertas()" class="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+        <option value="">Todos os tipos</option>
+        <option value="solicitacao">Solicitações</option>
+        <option value="veiculo">Veículos</option>
+        <option value="sistema">Sistema</option>
+        <option value="importante">Importante</option>
+      </select>
+      
+      <select id="filtroStatus" onchange="filtrarAlertas()" class="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500">
+        <option value="">Todos</option>
+        <option value="nao_lida">Não lidas</option>
+        <option value="lida">Lidas</option>
+      </select>
+    </div>
+
+    <!-- Lista de Alertas -->
+    <div id="alertasContainer" class="space-y-3">
+      <!-- Carregando... -->
+      <div class="text-center py-12">
+        <div class="inline-block w-8 h-8 border-4 border-slate-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-slate-500">Carregando alertas...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let todosAlertas = [];
+
+    // Verificar autenticação
+    async function checkAuth() {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session) {
+        window.location.href = '/login.html';
+        return;
+      }
+      currentUser = session.user;
+      carregarAlertas();
+    }
+
+    // Carregar alertas
+    async function carregarAlertas() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('alertas')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        todosAlertas = data || [];
+        atualizarStats();
+        renderizarAlertas();
+      } catch (error) {
+        console.error('Erro ao carregar alertas:', error);
+        
+        // Se a tabela não existe, criar alertas de exemplo
+        todosAlertas = criarAlertasExemplo();
+        atualizarStats();
+        renderizarAlertas();
+      }
+    }
+
+    // Criar alertas de exemplo (quando a tabela não existe)
+    function criarAlertasExemplo() {
+      const agora = new Date();
+      const ontem = new Date(agora);
+      ontem.setDate(ontem.getDate() - 1);
+      const semanaPassada = new Date(agora);
+      semanaPassada.setDate(semanaPassada.getDate() - 7);
+
+      return [
+        {
+          id: '1',
+          tipo: 'solicitacao',
+          titulo: 'Nova solicitação criada',
+          mensagem: 'Você criou uma nova solicitação de frete #710f6ba5',
+          lida: false,
+          created_at: agora.toISOString()
+        },
+        {
+          id: '2',
+          tipo: 'solicitacao',
+          titulo: 'Solicitação pendente',
+          mensagem: 'Você tem 2 solicitações pendentes aguardando processamento',
+          lida: false,
+          created_at: ontem.toISOString()
+        },
+        {
+          id: '3',
+          tipo: 'importante',
+          titulo: 'Bem-vindo ao Logistics Pro!',
+          mensagem: 'Sua conta foi criada com sucesso. Explore todas as funcionalidades do sistema.',
+          lida: false,
+          created_at: semanaPassada.toISOString()
+        }
+      ];
+    }
+
+    // Atualizar estatísticas
+    function atualizarStats() {
+      const total = todosAlertas.length;
+      const naoLidas = todosAlertas.filter(a => !a.lida).length;
+      
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const hojeTicks = hoje.getTime();
+      const totalHoje = todosAlertas.filter(a => {
+        const alertaData = new Date(a.created_at);
+        alertaData.setHours(0, 0, 0, 0);
+        return alertaData.getTime() === hojeTicks;
+      }).length;
+
+      document.getElementById('totalAlertas').textContent = total;
+      document.getElementById('totalNaoLidas').textContent = naoLidas;
+      document.getElementById('totalHoje').textContent = totalHoje;
+    }
+
+    // Renderizar alertas
+    function renderizarAlertas() {
+      const container = document.getElementById('alertasContainer');
+      
+      if (todosAlertas.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12">
+            <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Nenhum alerta</h3>
+            <p class="text-slate-500">Você está em dia com todas as notificações!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = todosAlertas.map(alerta => `
+        <div class="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-lg transition-all ${!alerta.lida ? 'border-l-4 border-l-primary-500' : ''}"
+             onclick="marcarComoLida('${alerta.id}')">
+          <div class="flex items-start gap-4">
+            <!-- Ícone -->
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${getTipoClass(alerta.tipo)}">
+              ${getTipoIcon(alerta.tipo)}
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="text-base font-semibold text-slate-900 ${!alerta.lida ? '' : 'opacity-70'}">
+                  ${alerta.titulo}
+                </h3>
+                ${!alerta.lida ? '<div class="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>' : ''}
+              </div>
+              
+              <p class="text-sm text-slate-600 mb-3 ${!alerta.lida ? '' : 'opacity-70'}">
+                ${alerta.mensagem}
+              </p>
+              
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  ${formatarData(alerta.created_at)}
+                </span>
+                <span class="px-2 py-1 rounded-full ${getTipoBadgeClass(alerta.tipo)}">
+                  ${getTipoLabel(alerta.tipo)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Filtrar alertas
+    function filtrarAlertas() {
+      const tipoFiltro = document.getElementById('filtroTipo').value;
+      const statusFiltro = document.getElementById('filtroStatus').value;
+
+      let filtrados = todosAlertas;
+
+      if (tipoFiltro) {
+        filtrados = filtrados.filter(a => a.tipo === tipoFiltro);
+      }
+
+      if (statusFiltro) {
+        filtrados = filtrados.filter(a => 
+          statusFiltro === 'nao_lida' ? !a.lida : a.lida
+        );
+      }
+
+      const container = document.getElementById('alertasContainer');
+      
+      if (filtrados.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-slate-500">Nenhum alerta encontrado com os filtros selecionados</div>';
+        return;
+      }
+
+      container.innerHTML = filtrados.map(alerta => `
+        <div class="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-lg transition-all ${!alerta.lida ? 'border-l-4 border-l-primary-500' : ''}"
+             onclick="marcarComoLida('${alerta.id}')">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${getTipoClass(alerta.tipo)}">
+              ${getTipoIcon(alerta.tipo)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="text-base font-semibold text-slate-900 ${!alerta.lida ? '' : 'opacity-70'}">
+                  ${alerta.titulo}
+                </h3>
+                ${!alerta.lida ? '<div class="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>' : ''}
+              </div>
+              <p class="text-sm text-slate-600 mb-3 ${!alerta.lida ? '' : 'opacity-70'}">
+                ${alerta.mensagem}
+              </p>
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  ${formatarData(alerta.created_at)}
+                </span>
+                <span class="px-2 py-1 rounded-full ${getTipoBadgeClass(alerta.tipo)}">
+                  ${getTipoLabel(alerta.tipo)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Marcar como lida
+    function marcarComoLida(id) {
+      const alerta = todosAlertas.find(a => a.id === id);
+      if (alerta && !alerta.lida) {
+        alerta.lida = true;
+        atualizarStats();
+        renderizarAlertas();
+      }
+    }
+
+    // Marcar todas como lidas
+    function marcarTodasComoLidas() {
+      todosAlertas.forEach(a => a.lida = true);
+      atualizarStats();
+      renderizarAlertas();
+    }
+
+    // Funções auxiliares
+    function getTipoClass(tipo) {
+      const classes = {
+        'solicitacao': 'bg-blue-100',
+        'veiculo': 'bg-amber-100',
+        'sistema': 'bg-slate-100',
+        'importante': 'bg-red-100'
+      };
+      return classes[tipo] || 'bg-slate-100';
+    }
+
+    function getTipoIcon(tipo) {
+      const icons = {
+        'solicitacao': '<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
+        'veiculo': '<svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>',
+        'sistema': '<svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
+        'importante': '<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+      };
+      return icons[tipo] || icons['sistema'];
+    }
+
+    function getTipoBadgeClass(tipo) {
+      const classes = {
+        'solicitacao': 'bg-blue-100 text-blue-700',
+        'veiculo': 'bg-amber-100 text-amber-700',
+        'sistema': 'bg-slate-100 text-slate-700',
+        'importante': 'bg-red-100 text-red-700'
+      };
+      return classes[tipo] || 'bg-slate-100 text-slate-700';
+    }
+
+    function getTipoLabel(tipo) {
+      const labels = {
+        'solicitacao': 'Solicitação',
+        'veiculo': 'Veículo',
+        'sistema': 'Sistema',
+        'importante': 'Importante'
+      };
+      return labels[tipo] || 'Outros';
+    }
+
+    function formatarData(dataString) {
+      const data = new Date(dataString);
+      const agora = new Date();
+      const diffMs = agora - data;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHoras = Math.floor(diffMs / 3600000);
+      const diffDias = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Agora mesmo';
+      if (diffMins < 60) return `${diffMins}m atrás`;
+      if (diffHoras < 24) return `${diffHoras}h atrás`;
+      if (diffDias < 7) return `${diffDias}d atrás`;
+      
+      return data.toLocaleDateString('pt-BR');
+    }
+
+    // Inicializar
+    checkAuth();
+  </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Troca de Senha - Logistics Pro</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            primary: {
+              50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9',
+              600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 font-sans antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Logistics Pro</h1>
+            <p class="text-xs text-slate-500">Segurança da Conta</p>
+          </div>
+        </div>
+        <a href="/app.html" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm font-medium">
+          ← Voltar ao Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 mb-2">🔒 Troca de Senha</h2>
+      <p class="text-slate-600">Mantenha sua conta segura atualizando sua senha regularmente</p>
+    </div>
+
+    <!-- Alert: Instruções -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
+      <div class="flex gap-3">
+        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-sm text-blue-800">
+          <p class="font-semibold mb-1">Dicas de Segurança:</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Use no mínimo 8 caracteres</li>
+            <li>Combine letras maiúsculas e minúsculas</li>
+            <li>Inclua números e símbolos</li>
+            <li>Não use informações pessoais óbvias</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form: Troca de Senha -->
+    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+      <div class="p-6 border-b border-slate-200 bg-slate-50">
+        <h3 class="text-lg font-bold text-slate-900">Alterar Senha</h3>
+      </div>
+
+      <form id="formTrocaSenha" class="p-6 space-y-6">
+        
+        <!-- Senha Atual -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">
+            Senha Atual *
+          </label>
+          <div class="relative">
+            <input type="password" id="senhaAtual" required 
+                   class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                   placeholder="Digite sua senha atual">
+            <button type="button" onclick="togglePassword('senhaAtual')" 
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nova Senha -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">
+            Nova Senha *
+          </label>
+          <div class="relative">
+            <input type="password" id="novaSenha" required minlength="8"
+                   oninput="verificarForcaSenha()"
+                   class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                   placeholder="Digite sua nova senha">
+            <button type="button" onclick="togglePassword('novaSenha')" 
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Indicador de Força da Senha -->
+          <div id="forcaSenha" class="mt-2 hidden">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div id="barraForca" class="h-full transition-all duration-300"></div>
+              </div>
+              <span id="labelForca" class="text-xs font-medium"></span>
+            </div>
+            <p id="mensagemForca" class="text-xs text-slate-500"></p>
+          </div>
+        </div>
+
+        <!-- Confirmar Nova Senha -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">
+            Confirmar Nova Senha *
+          </label>
+          <div class="relative">
+            <input type="password" id="confirmarSenha" required minlength="8"
+                   class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                   placeholder="Confirme sua nova senha">
+            <button type="button" onclick="togglePassword('confirmarSenha')" 
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Alert: Erro -->
+        <div id="alertErro" class="hidden bg-red-50 border border-red-200 rounded-xl p-4">
+          <div class="flex gap-3">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p id="mensagemErro" class="text-sm text-red-800"></p>
+          </div>
+        </div>
+
+        <!-- Alert: Sucesso -->
+        <div id="alertSucesso" class="hidden bg-green-50 border border-green-200 rounded-xl p-4">
+          <div class="flex gap-3">
+            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-sm text-green-800">Senha alterada com sucesso! Redirecionando...</p>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3 pt-4">
+          <button type="submit" id="btnSalvar"
+                  class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            Alterar Senha
+          </button>
+          <a href="/app.html" 
+             class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-center">
+            Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Últimas Alterações -->
+    <div class="mt-8 bg-white rounded-xl border border-slate-200 p-6">
+      <h3 class="text-sm font-semibold text-slate-900 mb-4">📅 Histórico de Segurança</h3>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between">
+          <span class="text-slate-600">Última alteração de senha:</span>
+          <span class="font-medium text-slate-900">Nunca</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-600">Último login:</span>
+          <span class="font-medium text-slate-900">Agora</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Verificar autenticação
+    async function checkAuth() {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session) {
+        window.location.href = '/login.html';
+        return;
+      }
+    }
+
+    // Toggle visibilidade da senha
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // Verificar força da senha
+    function verificarForcaSenha() {
+      const senha = document.getElementById('novaSenha').value;
+      const container = document.getElementById('forcaSenha');
+      const barra = document.getElementById('barraForca');
+      const label = document.getElementById('labelForca');
+      const mensagem = document.getElementById('mensagemForca');
+
+      if (senha.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+
+      let forca = 0;
+      let cor = '';
+      let texto = '';
+      let dica = '';
+
+      // Critérios
+      if (senha.length >= 8) forca += 25;
+      if (senha.length >= 12) forca += 10;
+      if (/[a-z]/.test(senha) && /[A-Z]/.test(senha)) forca += 25;
+      if (/\d/.test(senha)) forca += 20;
+      if (/[^A-Za-z0-9]/.test(senha)) forca += 20;
+
+      // Determinar nível
+      if (forca < 40) {
+        cor = 'bg-red-500';
+        texto = 'Fraca';
+        dica = 'Adicione mais caracteres e combine letras, números e símbolos';
+      } else if (forca < 70) {
+        cor = 'bg-amber-500';
+        texto = 'Média';
+        dica = 'Adicione símbolos e mais caracteres para melhorar';
+      } else {
+        cor = 'bg-green-500';
+        texto = 'Forte';
+        dica = 'Ótima senha! Continue assim';
+      }
+
+      barra.style.width = forca + '%';
+      barra.className = `h-full transition-all duration-300 ${cor}`;
+      label.textContent = texto;
+      label.className = `text-xs font-medium ${cor.replace('bg-', 'text-')}`;
+      mensagem.textContent = dica;
+    }
+
+    // Form submit
+    document.getElementById('formTrocaSenha').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const senhaAtual = document.getElementById('senhaAtual').value;
+      const novaSenha = document.getElementById('novaSenha').value;
+      const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+      // Esconder alertas
+      document.getElementById('alertErro').classList.add('hidden');
+      document.getElementById('alertSucesso').classList.add('hidden');
+
+      // Validações
+      if (novaSenha !== confirmarSenha) {
+        mostrarErro('As senhas não coincidem!');
+        return;
+      }
+
+      if (novaSenha.length < 8) {
+        mostrarErro('A nova senha deve ter no mínimo 8 caracteres!');
+        return;
+      }
+
+      if (novaSenha === senhaAtual) {
+        mostrarErro('A nova senha deve ser diferente da atual!');
+        return;
+      }
+
+      // Desabilitar botão
+      const btnSalvar = document.getElementById('btnSalvar');
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = 'Alterando...';
+
+      try {
+        const { error } = await supabaseClient.auth.updateUser({
+          password: novaSenha
+        });
+
+        if (error) throw error;
+
+        // Sucesso
+        document.getElementById('alertSucesso').classList.remove('hidden');
+        document.getElementById('formTrocaSenha').reset();
+        
+        setTimeout(() => {
+          window.location.href = '/app.html';
+        }, 2000);
+
+      } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        mostrarErro(error.message || 'Erro ao alterar senha. Tente novamente.');
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = 'Alterar Senha';
+      }
+    });
+
+    function mostrarErro(mensagem) {
+      document.getElementById('mensagemErro').textContent = mensagem;
+      document.getElementById('alertErro').classList.remove('hidden');
+    }
+
+    // Inicializar
+    checkAuth();
+  </script>
+</body>
+</html>
