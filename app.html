@@ -573,7 +573,7 @@
     </div>
 
 
-    <!-- JavaScript Inline - Corrigido -->
+    <!-- JavaScript Inline - VERSÃO FINAL CORRIGIDA -->
     <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
@@ -889,6 +889,14 @@ function verDetalhes(id) {
           <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.empresa || '-'}</p>
         </div>
         <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">E-mail</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.email || '-'}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Telefone</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.numero_contato || '-'}</p>
+        </div>
+        <div>
           <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Status</label>
           <p class="mt-1">
             <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">
@@ -898,7 +906,7 @@ function verDetalhes(id) {
         </div>
         <div>
           <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Data da Coleta</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${formatDate(frete.data_coleta)}</p>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${formatDate(frete.data_coleta)} ${frete.horario_janela || ''}</p>
         </div>
         <div>
           <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tipo</label>
@@ -907,6 +915,10 @@ function verDetalhes(id) {
         <div>
           <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Veículo</label>
           <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo_veiculo || '-'}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Urgência</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.urgencia || '-'}</p>
         </div>
       </div>
       
@@ -981,47 +993,108 @@ function toggleView(view) {
   }
 }
 
-// ==================== FORM SUBMIT ====================
+// ==================== FORM SUBMIT CORRIGIDO ====================
 const formNovoEnvio = document.getElementById('formNovoEnvio');
 if (formNovoEnvio) {
   formNovoEnvio.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Validar autenticação
     if (!currentUser) {
       alert('Você precisa estar logado para criar solicitações');
+      window.location.href = '/login.html';
       return;
     }
     
+    // Coletar dados do formulário
     const formData = new FormData(e.target);
+    
+    // Validar campos obrigatórios
+    const solicitante = formData.get('solicitante')?.trim();
+    const email = formData.get('email')?.trim();
+    const numero_contato = formData.get('numero_contato')?.trim();
+    const empresa = formData.get('empresa')?.trim();
+    const tipo = formData.get('tipo');
+    const tipo_veiculo = formData.get('tipo_veiculo');
+    const urgencia = formData.get('urgencia');
+    const data_coleta = formData.get('data_coleta');
+    const horario_janela = formData.get('horario_janela');
+    const endereco = formData.get('endereco')?.trim();
+    const observacao = formData.get('observacao')?.trim() || '';
+    
+    // Validação manual (caso o HTML5 não pegue)
+    if (!solicitante || !email || !numero_contato || !empresa || !tipo || 
+        !tipo_veiculo || !urgencia || !data_coleta || !horario_janela || !endereco) {
+      alert('⚠️ Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+    
+    // Preparar dados para envio
     const dados = {
-      solicitante: formData.get('solicitante'),
-      empresa: formData.get('empresa'),
-      tipo: formData.get('tipo'),
-      tipo_veiculo: formData.get('tipo_veiculo'),
-      urgencia: formData.get('urgencia'),
-      data_coleta: formData.get('data_coleta'),
-      horario_janela: formData.get('horario_janela'),
-      endereco: formData.get('endereco'),
-      observacao: formData.get('observacao'),
+      solicitante,
+      email,
+      numero_contato,
+      empresa,
+      tipo,
+      tipo_veiculo,
+      urgencia,
+      data_coleta,
+      horario_janela,
+      endereco,
+      observacao,
       status: 'pendente',
       user_id: currentUser.id
     };
     
+    // Desabilitar botão e mostrar loading
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const btnText = btnSubmit.querySelector('span');
+    const originalText = btnText.textContent;
+    btnSubmit.disabled = true;
+    btnText.textContent = 'Criando...';
+    
     try {
+      console.log('Enviando dados:', dados);
+      
       const { data, error } = await supabaseClient
         .from('fretes')
         .insert([dados])
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw new Error(error.message || 'Erro ao criar solicitação');
+      }
       
-      alert('Solicitação criada com sucesso!');
+      console.log('Solicitação criada:', data);
+      
+      // Sucesso!
+      alert('✅ Solicitação criada com sucesso!');
       e.target.reset();
       mudarAba('dashboard');
       await carregarDados();
+      
     } catch (error) {
       console.error('Erro ao criar solicitação:', error);
-      alert('Erro ao criar solicitação. Tente novamente.');
+      
+      // Mensagem de erro detalhada
+      let mensagemErro = '❌ Erro ao criar solicitação!\n\n';
+      
+      if (error.message.includes('duplicate key')) {
+        mensagemErro += 'Já existe uma solicitação com esses dados.';
+      } else if (error.message.includes('violates foreign key')) {
+        mensagemErro += 'Erro de relacionamento no banco de dados.';
+      } else if (error.message.includes('column') && error.message.includes('does not exist')) {
+        mensagemErro += 'Erro de estrutura do banco de dados. Entre em contato com o administrador.';
+      } else {
+        mensagemErro += error.message || 'Verifique os dados e tente novamente.';
+      }
+      
+      alert(mensagemErro);
+    } finally {
+      // Reabilitar botão
+      btnSubmit.disabled = false;
+      btnText.textContent = originalText;
     }
   });
 }
