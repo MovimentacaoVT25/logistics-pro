@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Solicitações - Logistics Pro</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+      color: #333;
+      font-size: 24px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #333;
+      margin-left: 10px;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .stat-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+    }
+    .stat-card .number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .fretes-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .fretes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .fretes-header h2 {
+      margin: 0;
+      color: #333;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filters select {
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .frete-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+    .frete-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .frete-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .frete-id {
+      font-weight: bold;
+      color: #667eea;
+    }
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pendente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-em_andamento {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-concluido {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-cancelado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .frete-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .detail-item {
+      font-size: 14px;
+      color: #666;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #333;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    .empty-state svg {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f4f6;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📦 Minhas Solicitações</h1>
+      <div>
+        <button class="btn btn-primary" onclick="window.location.href='/app.html'">← Voltar ao Dashboard</button>
+        <button class="btn btn-secondary" onclick="logout()">Sair</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total</h3>
+        <div class="number" id="totalFretes">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Pendentes</h3>
+        <div class="number" id="totalPendentes">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Em Andamento</h3>
+        <div class="number" id="totalEmAndamento">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Concluídos</h3>
+        <div class="number" id="totalConcluidos">0</div>
+      </div>
+    </div>
+
+    <div class="fretes-container">
+      <div class="fretes-header">
+        <h2>Meus Fretes</h2>
+      </div>
+
+      <div class="filters">
+        <select id="tipoFilter">
+          <option value="">Todos os tipos</option>
+          <option value="envio">Envio</option>
+          <option value="coleta">Coleta</option>
+        </select>
+        <select id="statusFilter">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="em_andamento">Em Andamento</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+
+      <div id="fretesContainer">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Carregando suas solicitações...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let allFretes = [];
+
+    // Verificar autenticação
+    async function checkAuth() {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error || !session) {
+        window.location.href = '/login.html';
+        return;
+      }
+      currentUser = session.user;
+      loadFretes();
+    }
+
+    // Carregar fretes do usuário
+    async function loadFretes() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('fretes')
+          .select('*')
+          .eq('solicitante_id', currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        allFretes = data || [];
+        updateStats();
+        renderFretes();
+      } catch (error) {
+        console.error('Erro ao carregar fretes:', error);
+        document.getElementById('fretesContainer').innerHTML = `
+          <div class="empty-state">
+            <p style="color: #991b1b;">Erro ao carregar solicitações. Tente novamente.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Atualizar estatísticas
+    function updateStats() {
+      const total = allFretes.length;
+      const pendentes = allFretes.filter(f => f.status === 'pendente').length;
+      const emAndamento = allFretes.filter(f => f.status === 'em_andamento').length;
+      const concluidos = allFretes.filter(f => f.status === 'concluido').length;
+
+      document.getElementById('totalFretes').textContent = total;
+      document.getElementById('totalPendentes').textContent = pendentes;
+      document.getElementById('totalEmAndamento').textContent = emAndamento;
+      document.getElementById('totalConcluidos').textContent = concluidos;
+    }
+
+    // Renderizar fretes
+    function renderFretes() {
+      const tipoFilter = document.getElementById('tipoFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      let filteredFretes = allFretes;
+
+      if (tipoFilter) {
+        filteredFretes = filteredFretes.filter(f => f.tipo === tipoFilter);
+      }
+
+      if (statusFilter) {
+        filteredFretes = filteredFretes.filter(f => f.status === statusFilter);
+      }
+
+      const container = document.getElementById('fretesContainer');
+
+      if (filteredFretes.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <h3>Nenhuma solicitação encontrada</h3>
+            <p>Você ainda não criou nenhuma solicitação de frete.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredFretes.map(frete => `
+        <div class="frete-card">
+          <div class="frete-header">
+            <span class="frete-id">#${frete.id.substring(0, 8).toUpperCase()}</span>
+            <span class="status-badge status-${frete.status}">${getStatusLabel(frete.status)}</span>
+          </div>
+          <div class="frete-details">
+            <div class="detail-item">
+              <span class="detail-label">Tipo:</span> ${frete.tipo === 'envio' ? '📤 Envio' : '📥 Coleta'}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Descrição:</span> ${frete.descricao || 'Não informado'}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Endereço:</span> ${frete.endereco || 'Não informado'}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Data:</span> ${formatDate(frete.data_coleta)}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Horário:</span> ${frete.horario || 'Não informado'}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Urgente:</span> ${frete.urgente ? '⚡ Sim' : 'Não'}
+            </div>
+            ${frete.volume_kg ? `<div class="detail-item"><span class="detail-label">Volume:</span> ${frete.volume_kg} kg</div>` : ''}
+            ${frete.quantidade ? `<div class="detail-item"><span class="detail-label">Quantidade:</span> ${frete.quantidade}</div>` : ''}
+            ${frete.motorista ? `<div class="detail-item"><span class="detail-label">Motorista:</span> ${frete.motorista}</div>` : ''}
+          </div>
+          ${frete.status === 'pendente' ? `
+            <div style="margin-top: 15px;">
+              <button class="btn btn-secondary" onclick="cancelarFrete('${frete.id}')">Cancelar Solicitação</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // Cancelar frete
+    async function cancelarFrete(freteId) {
+      if (!confirm('Deseja realmente cancelar esta solicitação?')) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('fretes')
+          .update({ status: 'cancelado' })
+          .eq('id', freteId);
+
+        if (error) throw error;
+
+        alert('Solicitação cancelada com sucesso!');
+        loadFretes();
+      } catch (error) {
+        console.error('Erro ao cancelar frete:', error);
+        alert('Erro ao cancelar solicitação. Tente novamente.');
+      }
+    }
+
+    // Funções auxiliares
+    function getStatusLabel(status) {
+      const labels = {
+        'pendente': 'Pendente',
+        'em_andamento': 'Em Andamento',
+        'concluido': 'Concluído',
+        'cancelado': 'Cancelado'
+      };
+      return labels[status] || status;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Não informado';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '/login.html';
+    }
+
+    // Event listeners
+    document.getElementById('tipoFilter').addEventListener('change', renderFretes);
+    document.getElementById('statusFilter').addEventListener('change', renderFretes);
+
+    // Inicializar
+    checkAuth();
+  </script>
+</body>
+</html>
