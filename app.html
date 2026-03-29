@@ -91,7 +91,7 @@
                         <button onclick="mudarAba('dados')" data-tab="dados" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all-300 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                             Analytics
                         </button>
-                        <button onclick="mudarAba('novo-envio')" data-tab="novo-envio" data-permissao="abrirChamado" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white shadow-md hover:bg-primary-700 hover:shadow-lg transition-all-300">
+                        <button onclick="mudarAba('novo-envio')" data-tab="novo-envio" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white shadow-md hover:bg-primary-700 hover:shadow-lg transition-all-300">
                             + Novo Envio
                         </button>
                     </nav>
@@ -572,8 +572,467 @@
         </div>
     </div>
 
-    <script src="/js/auth.js"></script>
-    <script src="/js/permissions.js"></script>
-    <script src="/js/app.js"></script>
+
+    <!-- JavaScript Inline - Corrigido -->
+    <script>
+// ==================== CONFIGURAÇÃO SUPABASE ====================
+const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+let currentUser = null;
+let userProfile = null;
+let allFretes = [];
+
+// ==================== AUTENTICAÇÃO ====================
+async function checkAuth() {
+  try {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+    
+    if (!session) {
+      window.location.href = '/login.html';
+      return false;
+    }
+    
+    currentUser = session.user;
+    await loadUserProfile();
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar autenticação:', error);
+    window.location.href = '/login.html';
+    return false;
+  }
+}
+
+async function loadUserProfile() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao carregar perfil:', error);
+    }
+    
+    userProfile = data || { nivel: 1, name: currentUser.email.split('@')[0] };
+    
+    // Atualizar UI
+    const name = userProfile.name || currentUser.email.split('@')[0];
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userEmail').textContent = getNivelLabel(userProfile.nivel || 1);
+    document.getElementById('userAvatar').textContent = name.substring(0, 2).toUpperCase();
+  } catch (error) {
+    console.error('Erro ao carregar perfil do usuário:', error);
+  }
+}
+
+function getNivelLabel(nivel) {
+  const labels = { 
+    0: 'Visitante', 
+    1: 'Solicitante', 
+    2: 'Operador', 
+    3: 'Administrador' 
+  };
+  return labels[nivel] || 'Usuário';
+}
+
+async function logout() {
+  try {
+    await supabaseClient.auth.signOut();
+    window.location.href = '/login.html';
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+    window.location.href = '/login.html';
+  }
+}
+
+// ==================== NAVEGAÇÃO ====================
+function mudarAba(aba) {
+  // Esconder todas as abas
+  document.querySelectorAll('.tab-content').forEach(el => {
+    el.classList.remove('active');
+    el.classList.add('hidden');
+  });
+  
+  // Resetar todos os botões
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('bg-primary-600', 'text-white', 'shadow-md');
+    btn.classList.add('text-slate-600', 'dark:text-slate-400');
+  });
+  
+  // Mostrar aba selecionada
+  const tabContent = document.getElementById(aba);
+  if (tabContent) {
+    tabContent.classList.add('active');
+    tabContent.classList.remove('hidden');
+  }
+  
+  // Ativar botão selecionado
+  const btn = document.querySelector(`[data-tab="${aba}"]`);
+  if (btn) {
+    btn.classList.add('bg-primary-600', 'text-white', 'shadow-md');
+    btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+  }
+}
+
+// ==================== DARK MODE ====================
+function toggleDarkMode() {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark);
+}
+
+// Aplicar dark mode salvo
+if (localStorage.getItem('darkMode') === 'true') {
+  document.documentElement.classList.add('dark');
+}
+
+// ==================== DADOS ====================
+async function carregarDados() {
+  if (!currentUser) {
+    await checkAuth();
+    return;
+  }
+  
+  try {
+    const { data: fretes, error } = await supabaseClient
+      .from('fretes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Erro ao carregar fretes:', error);
+      return;
+    }
+    
+    allFretes = fretes || [];
+    
+    // Atualizar estatísticas
+    atualizarEstatisticas(allFretes);
+    
+    // Renderizar tabela
+    renderizarTabela(allFretes);
+    
+    // Renderizar atividades
+    renderizarAtividades(allFretes);
+    
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+  }
+}
+
+function atualizarEstatisticas(fretes) {
+  const total = fretes.length;
+  const pendentes = fretes.filter(f => f.status === 'pendente' || f.status === 'Pendente').length;
+  const emAndamento = fretes.filter(f => f.status === 'em_andamento' || f.status === 'Em Andamento').length;
+  const concluidos = fretes.filter(f => f.status === 'concluido' || f.status === 'Concluído').length;
+  const cancelados = fretes.filter(f => f.status === 'cancelado' || f.status === 'Cancelado').length;
+  
+  document.getElementById('totalSolicitacoes').textContent = total;
+  document.getElementById('naoIniciadas').textContent = pendentes;
+  document.getElementById('emExecucao').textContent = emAndamento;
+  document.getElementById('concluidas').textContent = concluidos;
+  document.getElementById('canceladas').textContent = cancelados;
+}
+
+function renderizarTabela(fretes) {
+  const tbody = document.getElementById('tabelaSolicitacoes');
+  if (!tbody) return;
+  
+  if (fretes.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+          Nenhuma solicitação encontrada
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = fretes.slice(0, 10).map(frete => `
+    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onclick="verDetalhes('${frete.id}')">
+      <td class="px-4 py-3 font-mono text-xs text-slate-500">#${frete.id.substring(0, 8)}</td>
+      <td class="px-4 py-3">
+        <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">
+          ${getStatusLabel(frete.status)}
+        </span>
+      </td>
+      <td class="px-4 py-3 text-slate-900 dark:text-white">${frete.solicitante || '-'}</td>
+      <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${frete.empresa || '-'}</td>
+      <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${formatDate(frete.data_coleta)}</td>
+      <td class="px-4 py-3 text-center">
+        <button class="text-primary-600 hover:text-primary-700 font-medium text-sm">
+          Ver Detalhes
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderizarAtividades(fretes) {
+  const feed = document.getElementById('activityFeed');
+  if (!feed) return;
+  
+  const recentes = fretes.slice(0, 5);
+  
+  if (recentes.length === 0) {
+    feed.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400">Nenhuma atividade recente</p>';
+    return;
+  }
+  
+  feed.innerHTML = recentes.map(frete => `
+    <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800 transition-colors cursor-pointer" onclick="verDetalhes('${frete.id}')">
+      <div class="w-2 h-2 mt-2 rounded-full ${getActivityColor(frete.status)}"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">
+          ${frete.solicitante || 'Solicitante'} - ${frete.empresa || 'Empresa'}
+        </p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          ${getStatusLabel(frete.status)} • ${formatDatetime(frete.created_at)}
+        </p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getActivityColor(status) {
+  const colors = {
+    'pendente': 'bg-slate-500',
+    'Pendente': 'bg-slate-500',
+    'em_andamento': 'bg-amber-500',
+    'Em Andamento': 'bg-amber-500',
+    'concluido': 'bg-emerald-500',
+    'Concluído': 'bg-emerald-500',
+    'cancelado': 'bg-rose-500',
+    'Cancelado': 'bg-rose-500'
+  };
+  return colors[status] || 'bg-primary-500';
+}
+
+function getStatusClass(status) {
+  const normalized = status?.toLowerCase().replace(/\s/g, '_');
+  const classes = {
+    'pendente': 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+    'em_andamento': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    'concluido': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    'concluído': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    'cancelado': 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+  };
+  return classes[normalized] || classes.pendente;
+}
+
+function getStatusLabel(status) {
+  const normalized = status?.toLowerCase().replace(/\s/g, '_');
+  const labels = {
+    'pendente': 'Pendente',
+    'em_andamento': 'Em Andamento',
+    'concluido': 'Concluído',
+    'concluído': 'Concluído',
+    'cancelado': 'Cancelado'
+  };
+  return labels[normalized] || status || 'Pendente';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  try {
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatDatetime(dateStr) {
+  if (!dateStr) return '-';
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}min atrás`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h atrás`;
+    return date.toLocaleDateString('pt-BR');
+  } catch {
+    return dateStr;
+  }
+}
+
+function verDetalhes(id) {
+  const frete = allFretes.find(f => f.id === id);
+  if (!frete) return;
+  
+  const modal = document.getElementById('modalDetalhes');
+  const conteudo = document.getElementById('conteudoModal');
+  const subtitle = document.getElementById('modalSubtitle');
+  
+  subtitle.textContent = `ID: #${frete.id.substring(0, 8)}`;
+  
+  conteudo.innerHTML = `
+    <div class="space-y-6">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Solicitante</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.solicitante || '-'}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Empresa</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.empresa || '-'}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Status</label>
+          <p class="mt-1">
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">
+              ${getStatusLabel(frete.status)}
+            </span>
+          </p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Data da Coleta</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${formatDate(frete.data_coleta)}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tipo</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo || '-'}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Veículo</label>
+          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo_veiculo || '-'}</p>
+        </div>
+      </div>
+      
+      ${frete.endereco ? `
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Endereço</label>
+          <a href="${frete.endereco}" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 mt-1 block">
+            Ver no Google Maps →
+          </a>
+        </div>
+      ` : ''}
+      
+      ${frete.observacao ? `
+        <div>
+          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Observações</label>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${frete.observacao}</p>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  abrirModal();
+}
+
+function abrirModal() {
+  const modal = document.getElementById('modalDetalhes');
+  modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+  modal.classList.add('opacity-100');
+  
+  const content = document.getElementById('modalContent');
+  setTimeout(() => {
+    content.classList.remove('scale-95');
+    content.classList.add('scale-100');
+  }, 10);
+}
+
+function fecharModal() {
+  const modal = document.getElementById('modalDetalhes');
+  const content = document.getElementById('modalContent');
+  
+  content.classList.remove('scale-100');
+  content.classList.add('scale-95');
+  
+  setTimeout(() => {
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  }, 200);
+}
+
+function toggleView(view) {
+  const listView = document.getElementById('viewList');
+  const gridView = document.getElementById('viewGrid');
+  const btnList = document.getElementById('btnViewList');
+  const btnGrid = document.getElementById('btnViewGrid');
+  
+  if (view === 'list') {
+    listView.classList.remove('hidden');
+    gridView.classList.add('hidden');
+    btnList.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+    btnList.classList.remove('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+    btnGrid.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+    btnGrid.classList.add('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+  } else {
+    listView.classList.add('hidden');
+    gridView.classList.remove('hidden');
+    btnGrid.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+    btnGrid.classList.remove('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+    btnList.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+    btnList.classList.add('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+  }
+}
+
+// ==================== FORM SUBMIT ====================
+const formNovoEnvio = document.getElementById('formNovoEnvio');
+if (formNovoEnvio) {
+  formNovoEnvio.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
+      alert('Você precisa estar logado para criar solicitações');
+      return;
+    }
+    
+    const formData = new FormData(e.target);
+    const dados = {
+      solicitante: formData.get('solicitante'),
+      empresa: formData.get('empresa'),
+      tipo: formData.get('tipo'),
+      tipo_veiculo: formData.get('tipo_veiculo'),
+      urgencia: formData.get('urgencia'),
+      data_coleta: formData.get('data_coleta'),
+      horario_janela: formData.get('horario_janela'),
+      endereco: formData.get('endereco'),
+      observacao: formData.get('observacao'),
+      status: 'pendente',
+      user_id: currentUser.id
+    };
+    
+    try {
+      const { data, error } = await supabaseClient
+        .from('fretes')
+        .insert([dados])
+        .select();
+      
+      if (error) throw error;
+      
+      alert('Solicitação criada com sucesso!');
+      e.target.reset();
+      mudarAba('dashboard');
+      await carregarDados();
+    } catch (error) {
+      console.error('Erro ao criar solicitação:', error);
+      alert('Erro ao criar solicitação. Tente novamente.');
+    }
+  });
+}
+
+// ==================== INICIALIZAÇÃO ====================
+(async () => {
+  const isAuth = await checkAuth();
+  if (isAuth) {
+    await carregarDados();
+  }
+})();
+    </script>
 </body>
 </html>
