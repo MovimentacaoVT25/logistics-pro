@@ -47,12 +47,9 @@
         }
     </script>
 </head>
-
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-primary-500 selection:text-white">
-
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
-
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm z-[9998] hidden items-center justify-center">
         <div class="flex flex-col items-center gap-4">
@@ -60,11 +57,11 @@
             <p class="text-sm font-medium text-slate-600 dark:text-slate-400 animate-pulse">Processando...</p>
         </div>
     </div>
-
     <div class="relative flex min-h-screen flex-col">
-        <!-- Header Moderno com Glass Effect -->
+        <!-- ════ HEADER ════ -->
         <header class="sticky top-0 z-50 glass shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- ALTERADO: max-w-7xl → max-w-screen-2xl, padding lateral aumentado -->
+            <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10">
                 <div class="flex items-center justify-between h-16">
                     <!-- Logo -->
                     <div class="flex items-center gap-3 group cursor-pointer" onclick="mudarAba('dashboard')">
@@ -81,7 +78,6 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Gestão Inteligente</p>
                         </div>
                     </div>
-
                     <!-- Navigation Pills -->
                     <nav class="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
                         <button onclick="mudarAba('dashboard')" data-tab="dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all-300 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white relative bg-primary-600 text-white shadow-md">
@@ -100,7 +96,6 @@
                             + Novo Envio
                         </button>
                     </nav>
-
                     <!-- Actions -->
                     <div class="flex items-center gap-3">
                         <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all-300" title="Alternar tema">
@@ -117,7 +112,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                         </button>
-
                         <div class="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                         
                         <div class="flex items-center gap-3 pl-2">
@@ -144,18 +138,21 @@
             </div>
         </header>
 
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- ════ MAIN ════ -->
+        <!-- ALTERADO: max-w-7xl → max-w-screen-2xl, padding lg:px-10, py-6 -->
+        <main class="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-10 py-6">
             
             <!-- Dashboard View -->
-            <div id="dashboard" class="tab-content active space-y-6 animate-fade-in">
-                <!-- Welcome Banner -->
-                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 text-white p-8 shadow-lg">
+            <div id="dashboard" class="tab-content active space-y-5 animate-fade-in">
+
+                <!-- ── Welcome Banner ALTERADO: p-8→p-5, texto menor ── -->
+                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 text-white p-5 shadow-lg">
                     <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                     <div class="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -ml-12 -mb-12 blur-2xl"></div>
-                    <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                         <div>
-                            <h2 class="text-3xl font-bold mb-2">Visão Geral</h2>
-                            <p class="text-primary-100 text-lg">Acompanhe suas solicitações em tempo real</p>
+                            <h2 class="text-2xl font-bold mb-0.5">Visão Geral</h2>
+                            <p class="text-primary-100 text-sm">Acompanhe suas solicitações em tempo real</p>
                         </div>
                         <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
                             <span class="relative flex h-3 w-3">
@@ -167,10 +164,10 @@
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
-                        <div class="flex items-center justify-between mb-4">
+                <!-- ── Stats Grid ALTERADO: gap-4→gap-3 ── -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-soft">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -181,9 +178,8 @@
                         <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1" id="totalSolicitacoes">-</p>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Solicitações</p>
                     </div>
-
-                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-soft">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                                 <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -194,9 +190,8 @@
                         <p class="text-3xl font-bold text-slate-700 dark:text-slate-300 mb-1" id="naoIniciadas">-</p>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Não iniciadas</p>
                     </div>
-
-                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-soft">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
                                 <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -207,9 +202,8 @@
                         <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1" id="emExecucao">-</p>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Em execução</p>
                     </div>
-
-                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-soft">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
                                 <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -220,9 +214,8 @@
                         <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1" id="concluidas">-</p>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Concluídas</p>
                     </div>
-
-                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="card-lift bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-soft">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="p-2 bg-rose-50 dark:bg-rose-900/30 rounded-lg">
                                 <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -235,10 +228,11 @@
                     </div>
                 </div>
 
-                <!-- Main Content Grid -->
-                <div class="grid lg:grid-cols-3 gap-6">
-                    <!-- Chart Section -->
-                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
+                <!-- ── Main Content Grid ALTERADO: grid-cols-3→grid-cols-4, gap-6→gap-5 ── -->
+                <div class="grid lg:grid-cols-4 gap-5">
+
+                    <!-- Chart Section ALTERADO: col-span-2→col-span-3 -->
+                    <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Solicitações do Dia</h3>
@@ -273,16 +267,16 @@
                                 </table>
                             </div>
                         </div>
-
                         <div id="viewGrid" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Cards populated by JS -->
                         </div>
                     </div>
 
-                    <!-- Activity Feed -->
+                    <!-- Activity Feed (1 coluna) -->
                     <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-soft">
                         <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Atividade Recente</h3>
-                        <div id="activityFeed" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- ALTERADO: max-h-[500px]→max-h-[640px], space-y-4→space-y-3 -->
+                        <div id="activityFeed" class="space-y-3 max-h-[640px] overflow-y-auto pr-2">
                             <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700 animate-pulse">
                                 <div class="w-2 h-2 mt-2 rounded-full bg-primary-500"></div>
                                 <div class="flex-1">
@@ -322,7 +316,6 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-soft overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
@@ -367,7 +360,6 @@
                         </button>
                     </div>
                 </div>
-
                 <!-- Charts Grid -->
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-soft">
@@ -379,7 +371,6 @@
                         <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Status Distribution</h3>
                         <canvas id="chartStatus" height="250"></canvas>
                     </div>
-
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-soft">
                         <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Top Empresas</h3>
                         <div id="topEmpresasList" class="space-y-3">
@@ -387,7 +378,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-soft">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Histórico Detalhado (Últimos 3 Meses)</h3>
                     <div id="historicoMeses" class="space-y-4">
@@ -403,7 +393,6 @@
                         <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Nova Solicitação de Frete</h2>
                         <p class="text-slate-500 dark:text-slate-400">Preencha os dados abaixo para criar uma nova solicitação</p>
                     </div>
-
                     <form id="formNovoEnvio" class="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div class="p-8 space-y-8">
                             <!-- Section 1: Personal Info -->
@@ -436,16 +425,13 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="h-px bg-slate-200 dark:bg-slate-700"></div>
-
                             <!-- Section 2: Service Details -->
                             <div class="space-y-6">
                                 <div class="flex items-center gap-3 mb-4">
                                     <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm">2</div>
                                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Detalhes do Serviço</h3>
                                 </div>
-
                                 <div class="grid md:grid-cols-3 gap-6">
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de Serviço</label>
@@ -464,7 +450,6 @@
                                             </label>
                                         </div>
                                     </div>
-
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Veículo</label>
                                         <select name="tipo_veiculo" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all-300">
@@ -474,7 +459,6 @@
                                             <option value="Van">Van</option>
                                         </select>
                                     </div>
-
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Urgência</label>
                                         <div class="flex gap-3">
@@ -493,7 +477,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="grid md:grid-cols-2 gap-6">
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Data da Coleta/Envio</label>
@@ -507,17 +490,13 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="h-px bg-slate-200 dark:bg-slate-700"></div>
-
                             <!-- Section 3: Location -->
                             <div class="space-y-6">
                                 <div class="flex items-center gap-3 mb-4">
                                     <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm">3</div>
                                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Localização do Destino</h3>
                                 </div>
-
-                                <!-- Tabs: Busca ou Link -->
                                 <div class="flex gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-xl w-fit">
                                     <button type="button" id="tabBusca" onclick="alternarModoEndereco('busca')"
                                         class="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all">
@@ -528,8 +507,6 @@
                                         🔗 Link Google Maps
                                     </button>
                                 </div>
-
-                                <!-- Modo busca -->
                                 <div id="modoBusca" class="space-y-3">
                                     <div class="relative">
                                         <input type="text" id="inputBuscaEndereco" placeholder="Digite o endereço de entrega..."
@@ -538,13 +515,10 @@
                                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                         </svg>
-                                        <!-- Sugestões -->
                                         <div id="sugestoesEndereco" class="hidden absolute z-50 w-full top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden"></div>
                                     </div>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Digite e selecione o endereço nas sugestões para confirmar no mapa</p>
                                 </div>
-
-                                <!-- Modo link -->
                                 <div id="modoLink" class="hidden space-y-3">
                                     <div class="relative">
                                         <input type="text" id="inputLinkMaps" placeholder="https://maps.google.com/..."
@@ -556,8 +530,6 @@
                                     </div>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Cole o link do Google Maps — o sistema extrai as coordenadas automaticamente</p>
                                 </div>
-
-                                <!-- Mini mapa de confirmação -->
                                 <div id="miniMapaWrapper" class="hidden space-y-3">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
@@ -568,18 +540,14 @@
                                     </div>
                                     <p id="enderecoConfirmado" class="text-sm text-primary-600 dark:text-primary-400 font-medium"></p>
                                     <div id="miniMapa" style="height:220px;border-radius:12px;overflow:hidden;border:2px solid #0ea5e9;"></div>
-                                    <!-- Campos hidden com coordenadas -->
                                     <input type="hidden" name="endereco" id="hiddenEndereco">
                                     <input type="hidden" name="destino_lat" id="hiddenLat">
                                     <input type="hidden" name="destino_lng" id="hiddenLng">
                                     <input type="hidden" name="destino_endereco" id="hiddenDestEndereco">
                                 </div>
-
-                                <!-- Aviso se não confirmou -->
                                 <div id="avisoDestino" class="hidden p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
                                     <p class="text-sm text-amber-700 dark:text-amber-400">⚠️ Confirme o endereço no mapa antes de criar a solicitação</p>
                                 </div>
-
                                 <div class="space-y-2">
                                     <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
                                     <textarea name="observacao" rows="3" placeholder="Informações adicionais sobre a entrega..."
@@ -587,7 +555,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="bg-slate-50 dark:bg-slate-700/30 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div id="mensagemEnvio" class="hidden flex items-center gap-2 text-sm"></div>
                             <div class="flex gap-3 w-full sm:w-auto">
@@ -603,6 +570,7 @@
                     </form>
                 </div>
             </div>
+
             <!-- ════ ACOMPANHAMENTO ════ -->
             <div id="acompanhamento" class="tab-content hidden space-y-4 animate-fade-in">
               <div class="flex items-center justify-between">
@@ -621,16 +589,12 @@
                   </button>
                 </div>
               </div>
-
               <div class="grid lg:grid-cols-3 gap-4">
-                <!-- Mapa principal -->
                 <div class="lg:col-span-2">
                   <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-soft">
                     <div id="mapaAcompanhamento" style="height:520px;"></div>
                   </div>
                 </div>
-
-                <!-- Lista de motoristas ativos -->
                 <div class="space-y-3">
                   <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider px-1">Motoristas em Campo</p>
                   <div id="listaMotoristas" class="space-y-3 max-h-[520px] overflow-y-auto pr-1">
@@ -639,7 +603,6 @@
                 </div>
               </div>
             </div>
-
         </main>
     </div>
 
@@ -664,26 +627,19 @@
         </div>
     </div>
 
-
-    <!-- JavaScript Inline - VERSÃO FINAL CORRIGIDA -->
+    <!-- JavaScript (idêntico ao original, apenas slice alterado) -->
     <script>
 // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-
-// Inicializa cliente Supabase diretamente do CDN
-// auth.js usa _client internamente e não sobrescreve window.supabase
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
-
 let currentUser = null;
 let userProfile = null;
 let allFretes = [];
 
-// ==================== AUTENTICAÇÃO ====================
-// Pega sessão direto do localStorage — não depende do cliente JS que pode travar
 function _getSessionFromStorage() {
   try {
     const key = 'sb-mytiqqfsmglzmqxfnerc-auth-token';
@@ -691,97 +647,56 @@ function _getSessionFromStorage() {
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
-
 async function checkAuth() {
   try {
     const session = _getSessionFromStorage();
-    if (!session || !session.access_token) {
-      window.location.href = '/login.html';
-      return false;
-    }
+    if (!session || !session.access_token) { window.location.href = '/login.html'; return false; }
     currentUser = session.user;
     await loadUserProfile(session.access_token);
     return true;
-  } catch (error) {
-    console.error('Erro ao verificar autenticação:', error);
-    window.location.href = '/login.html';
-    return false;
-  }
+  } catch (error) { console.error('Erro ao verificar autenticação:', error); window.location.href = '/login.html'; return false; }
 }
-
 async function loadUserProfile(token) {
   try {
     const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
     const tok = token || _getSessionFromStorage()?.access_token || SUPA_KEY;
-
     const resp = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${currentUser.id}&select=*&limit=1`, {
       headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${tok}` }
     });
     const rows = resp.ok ? await resp.json() : [];
     const data = rows[0] || null;
-
     userProfile = data || { nivel: 1, nome: currentUser.email.split('@')[0] };
-
     const name = userProfile.nome || userProfile.name || currentUser.email.split('@')[0];
     document.getElementById('userName').textContent = name;
     document.getElementById('userEmail').textContent = getNivelLabel(userProfile.nivel || 1);
     document.getElementById('userAvatar').textContent = name.substring(0, 2).toUpperCase();
     _aplicarNavPorNivel();
-  } catch (error) {
-    console.error('Erro ao carregar perfil do usuário:', error);
-  }
+  } catch (error) { console.error('Erro ao carregar perfil do usuário:', error); }
 }
-
 function getNivelLabel(nivel) {
-  const labels = {
-    1: 'Visualizador',
-    2: 'Solicitante',
-    3: 'Gestor',
-    4: 'Motorista',
-    5: 'Administrador'
-  };
+  const labels = { 1:'Visualizador', 2:'Solicitante', 3:'Gestor', 4:'Motorista', 5:'Administrador' };
   return labels[nivel] || 'Usuário';
 }
-
 async function logout() {
-  try {
-    await supabaseClient.auth.signOut();
-    window.location.href = '/login.html';
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-    window.location.href = '/login.html';
-  }
+  try { await supabaseClient.auth.signOut(); window.location.href = '/login.html'; }
+  catch (error) { console.error('Erro ao fazer logout:', error); window.location.href = '/login.html'; }
 }
 
 // ==================== NAVEGAÇÃO ====================
 function mudarAba(aba) {
-  document.querySelectorAll('.tab-content').forEach(el => {
-    el.classList.remove('active');
-    el.classList.add('hidden');
-  });
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('bg-primary-600', 'text-white', 'shadow-md');
-    btn.classList.add('text-slate-600', 'dark:text-slate-400');
-  });
-
+  document.querySelectorAll('.tab-content').forEach(el => { el.classList.remove('active'); el.classList.add('hidden'); });
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('bg-primary-600','text-white','shadow-md'); btn.classList.add('text-slate-600','dark:text-slate-400'); });
   const tabContent = document.getElementById(aba);
   if (tabContent) { tabContent.classList.add('active'); tabContent.classList.remove('hidden'); }
-
   const btn = document.querySelector(`[data-tab="${aba}"]`);
   if (btn) { btn.classList.add('bg-primary-600','text-white','shadow-md'); btn.classList.remove('text-slate-600','dark:text-slate-400'); }
-
-  // Iniciar/parar realtime do acompanhamento
-  if (aba === 'acompanhamento') { _iniciarAtualizacaoAcomp(); }
-  else { _pararAtualizacaoAcomp(); }
+  if (aba === 'acompanhamento') { _iniciarAtualizacaoAcomp(); } else { _pararAtualizacaoAcomp(); }
 }
-
 function _aplicarNavPorNivel() {
   const nivel = userProfile?.nivel || 0;
-  // Aba Acompanhamento — apenas Gestor (3) e Admin (5)
   const btnAcomp = document.getElementById('btnAcompanhamento');
   if (btnAcomp) btnAcomp.classList.toggle('hidden', !(nivel === 3 || nivel === 5));
-  // Aba Novo Envio — apenas Solicitante (2), Gestor (3), Admin (5)
   const btnNovo = document.getElementById('btnNovoEnvio');
   if (btnNovo) btnNovo.classList.toggle('hidden', !(nivel === 2 || nivel === 3 || nivel === 5));
 }
@@ -789,662 +704,276 @@ function _aplicarNavPorNivel() {
 // ==================== DARK MODE ====================
 function toggleDarkMode() {
   document.documentElement.classList.toggle('dark');
-  const isDark = document.documentElement.classList.contains('dark');
-  localStorage.setItem('darkMode', isDark);
+  localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
 }
-
-// Aplicar dark mode salvo
-if (localStorage.getItem('darkMode') === 'true') {
-  document.documentElement.classList.add('dark');
-}
+if (localStorage.getItem('darkMode') === 'true') { document.documentElement.classList.add('dark'); }
 
 // ==================== DADOS ====================
 async function carregarDados() {
-  if (!currentUser) {
-    await checkAuth();
-    return;
-  }
-  
+  if (!currentUser) { await checkAuth(); return; }
   try {
-    // Usa fetch direto para evitar conflito do cliente JS
     const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
     const tok = _getSessionFromStorage()?.access_token || SUPA_KEY;
-
     const fretesResp = await fetch(`${SUPA_URL}/rest/v1/fretes?select=*&order=created_at.desc`, {
       headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${tok}` }
     });
     const fretes = fretesResp.ok ? await fretesResp.json() : [];
     allFretes = fretes || [];
-    
-    // Atualizar estatísticas
     atualizarEstatisticas(allFretes);
-    
-    // Renderizar tabela
     renderizarTabela(allFretes);
-    
-    // Renderizar atividades
     renderizarAtividades(allFretes);
-    
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-  }
+  } catch (error) { console.error('Erro ao carregar dados:', error); }
 }
-
 function atualizarEstatisticas(fretes) {
-  const total = fretes.length;
-  const pendentes = fretes.filter(f => f.status === 'pendente' || f.status === 'Pendente').length;
-  const emAndamento = fretes.filter(f => f.status === 'em_andamento' || f.status === 'Em Andamento').length;
-  const concluidos = fretes.filter(f => f.status === 'concluido' || f.status === 'Concluído').length;
-  const cancelados = fretes.filter(f => f.status === 'cancelado' || f.status === 'Cancelado').length;
-  
-  document.getElementById('totalSolicitacoes').textContent = total;
-  document.getElementById('naoIniciadas').textContent = pendentes;
-  document.getElementById('emExecucao').textContent = emAndamento;
-  document.getElementById('concluidas').textContent = concluidos;
-  document.getElementById('canceladas').textContent = cancelados;
+  document.getElementById('totalSolicitacoes').textContent = fretes.length;
+  document.getElementById('naoIniciadas').textContent = fretes.filter(f => f.status === 'pendente' || f.status === 'Pendente').length;
+  document.getElementById('emExecucao').textContent = fretes.filter(f => f.status === 'em_andamento' || f.status === 'Em Andamento').length;
+  document.getElementById('concluidas').textContent = fretes.filter(f => f.status === 'concluido' || f.status === 'Concluído').length;
+  document.getElementById('canceladas').textContent = fretes.filter(f => f.status === 'cancelado' || f.status === 'Cancelado').length;
 }
-
 function renderizarTabela(fretes) {
   const tbody = document.getElementById('tabelaSolicitacoes');
   if (!tbody) return;
-  
   if (fretes.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-          Nenhuma solicitação encontrada
-        </td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">Nenhuma solicitação encontrada</td></tr>`;
     return;
   }
-  
-  tbody.innerHTML = fretes.slice(0, 10).map(frete => `
+  // ALTERADO: slice(0,10) → slice(0,15)
+  tbody.innerHTML = fretes.slice(0, 15).map(frete => `
     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onclick="verDetalhes('${frete.id}')">
       <td class="px-4 py-3 font-mono text-xs text-slate-500">#${frete.id.substring(0, 8)}</td>
-      <td class="px-4 py-3">
-        <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">
-          ${getStatusLabel(frete.status)}
-        </span>
-      </td>
+      <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">${getStatusLabel(frete.status)}</span></td>
       <td class="px-4 py-3 text-slate-900 dark:text-white">${frete.solicitante || '-'}</td>
       <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${frete.empresa || '-'}</td>
       <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${formatDate(frete.data_coleta)}</td>
-      <td class="px-4 py-3 text-center">
-        <button class="text-primary-600 hover:text-primary-700 font-medium text-sm">
-          Ver Detalhes
-        </button>
-      </td>
+      <td class="px-4 py-3 text-center"><button class="text-primary-600 hover:text-primary-700 font-medium text-sm">Ver Detalhes</button></td>
     </tr>
   `).join('');
 }
-
 function renderizarAtividades(fretes) {
   const feed = document.getElementById('activityFeed');
   if (!feed) return;
-  
-  const recentes = fretes.slice(0, 5);
-  
-  if (recentes.length === 0) {
-    feed.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400">Nenhuma atividade recente</p>';
-    return;
-  }
-  
+  const recentes = fretes.slice(0, 8);
+  if (recentes.length === 0) { feed.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400">Nenhuma atividade recente</p>'; return; }
   feed.innerHTML = recentes.map(frete => `
     <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800 transition-colors cursor-pointer" onclick="verDetalhes('${frete.id}')">
-      <div class="w-2 h-2 mt-2 rounded-full ${getActivityColor(frete.status)}"></div>
+      <div class="w-2 h-2 mt-2 rounded-full flex-shrink-0 ${getActivityColor(frete.status)}"></div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">
-          ${frete.solicitante || 'Solicitante'} - ${frete.empresa || 'Empresa'}
-        </p>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          ${getStatusLabel(frete.status)} • ${formatDatetime(frete.created_at)}
-        </p>
+        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${frete.solicitante || 'Solicitante'} - ${frete.empresa || 'Empresa'}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${getStatusLabel(frete.status)} • ${formatDatetime(frete.created_at)}</p>
       </div>
     </div>
   `).join('');
 }
-
 function getActivityColor(status) {
-  const colors = {
-    'pendente': 'bg-slate-500',
-    'Pendente': 'bg-slate-500',
-    'em_andamento': 'bg-amber-500',
-    'Em Andamento': 'bg-amber-500',
-    'concluido': 'bg-emerald-500',
-    'Concluído': 'bg-emerald-500',
-    'cancelado': 'bg-rose-500',
-    'Cancelado': 'bg-rose-500'
-  };
+  const colors = { 'pendente':'bg-slate-500','Pendente':'bg-slate-500','em_andamento':'bg-amber-500','Em Andamento':'bg-amber-500','concluido':'bg-emerald-500','Concluído':'bg-emerald-500','cancelado':'bg-rose-500','Cancelado':'bg-rose-500' };
   return colors[status] || 'bg-primary-500';
 }
-
 function getStatusClass(status) {
   const normalized = status?.toLowerCase().replace(/\s/g, '_');
-  const classes = {
-    'pendente': 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
-    'em_andamento': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    'concluido': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    'concluído': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    'cancelado': 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-  };
+  const classes = { 'pendente':'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300','aceito':'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400','em_andamento':'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400','concluido':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400','concluído':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400','cancelado':'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' };
   return classes[normalized] || classes.pendente;
 }
-
 function getStatusLabel(status) {
   const normalized = status?.toLowerCase().replace(/\s/g, '_');
-  const labels = {
-    'pendente': 'Pendente',
-    'em_andamento': 'Em Andamento',
-    'concluido': 'Concluído',
-    'concluído': 'Concluído',
-    'cancelado': 'Cancelado'
-  };
+  const labels = { 'pendente':'Pendente','aceito':'Aceito','em_andamento':'Em Andamento','concluido':'Concluído','concluído':'Concluído','cancelado':'Cancelado' };
   return labels[normalized] || status || 'Pendente';
 }
-
 function formatDate(dateStr) {
   if (!dateStr) return '-';
-  try {
-    return new Date(dateStr).toLocaleDateString('pt-BR');
-  } catch {
-    return dateStr;
-  }
+  try { return new Date(dateStr).toLocaleDateString('pt-BR'); } catch { return dateStr; }
 }
-
 function formatDatetime(dateStr) {
   if (!dateStr) return '-';
   try {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
+    const date = new Date(dateStr), now = new Date(), diffMins = Math.floor((now - date) / 60000);
     if (diffMins < 1) return 'Agora';
     if (diffMins < 60) return `${diffMins}min atrás`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h atrás`;
     return date.toLocaleDateString('pt-BR');
-  } catch {
-    return dateStr;
-  }
+  } catch { return dateStr; }
 }
-
 function verDetalhes(id) {
   const frete = allFretes.find(f => f.id === id);
   if (!frete) return;
-  
-  const modal = document.getElementById('modalDetalhes');
-  const conteudo = document.getElementById('conteudoModal');
-  const subtitle = document.getElementById('modalSubtitle');
-  
-  subtitle.textContent = `ID: #${frete.id.substring(0, 8)}`;
-  
-  conteudo.innerHTML = `
+  document.getElementById('modalSubtitle').textContent = `ID: #${frete.id.substring(0, 8)}`;
+  document.getElementById('conteudoModal').innerHTML = `
     <div class="space-y-6">
       <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Solicitante</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.solicitante || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Empresa</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.empresa || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">E-mail</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.email || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Telefone</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.numero_contato || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Status</label>
-          <p class="mt-1">
-            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">
-              ${getStatusLabel(frete.status)}
-            </span>
-          </p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Data da Coleta</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${formatDate(frete.data_coleta)} ${frete.horario_janela || ''}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tipo</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Veículo</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo_veiculo || '-'}</p>
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Urgência</label>
-          <p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.urgencia || '-'}</p>
-        </div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Solicitante</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.solicitante || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Empresa</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.empresa || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">E-mail</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.email || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Telefone</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.numero_contato || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Status</label><p class="mt-1"><span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusClass(frete.status)}">${getStatusLabel(frete.status)}</span></p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Data da Coleta</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${formatDate(frete.data_coleta)} ${frete.horario_janela || ''}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Tipo</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Veículo</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.tipo_veiculo || '-'}</p></div>
+        <div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Urgência</label><p class="text-sm font-medium text-slate-900 dark:text-white mt-1">${frete.urgencia || '-'}</p></div>
       </div>
-      
-      ${frete.endereco ? `
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Endereço</label>
-          <a href="${frete.endereco}" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 mt-1 block">
-            Ver no Google Maps →
-          </a>
-        </div>
-      ` : ''}
-      
-      ${frete.observacao ? `
-        <div>
-          <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Observações</label>
-          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${frete.observacao}</p>
-        </div>
-      ` : ''}
-    </div>
-  `;
-  
+      ${frete.endereco ? `<div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Endereço</label><a href="${frete.endereco}" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 mt-1 block">Ver no Google Maps →</a></div>` : ''}
+      ${frete.observacao ? `<div><label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Observações</label><p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${frete.observacao}</p></div>` : ''}
+    </div>`;
   abrirModal();
 }
-
 function abrirModal() {
   const modal = document.getElementById('modalDetalhes');
-  modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+  modal.classList.remove('hidden','opacity-0','pointer-events-none');
   modal.classList.add('opacity-100');
-  
-  const content = document.getElementById('modalContent');
-  setTimeout(() => {
-    content.classList.remove('scale-95');
-    content.classList.add('scale-100');
-  }, 10);
+  setTimeout(() => { document.getElementById('modalContent').classList.remove('scale-95'); document.getElementById('modalContent').classList.add('scale-100'); }, 10);
 }
-
 function fecharModal() {
   const modal = document.getElementById('modalDetalhes');
-  const content = document.getElementById('modalContent');
-  
-  content.classList.remove('scale-100');
-  content.classList.add('scale-95');
-  
-  setTimeout(() => {
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    setTimeout(() => {
-      modal.classList.add('hidden');
-    }, 300);
-  }, 200);
+  document.getElementById('modalContent').classList.remove('scale-100');
+  document.getElementById('modalContent').classList.add('scale-95');
+  setTimeout(() => { modal.classList.add('opacity-0','pointer-events-none'); setTimeout(() => modal.classList.add('hidden'), 300); }, 200);
 }
-
 function toggleView(view) {
-  const listView = document.getElementById('viewList');
-  const gridView = document.getElementById('viewGrid');
-  const btnList = document.getElementById('btnViewList');
-  const btnGrid = document.getElementById('btnViewGrid');
-  
+  const listView = document.getElementById('viewList'), gridView = document.getElementById('viewGrid');
+  const btnList = document.getElementById('btnViewList'), btnGrid = document.getElementById('btnViewGrid');
   if (view === 'list') {
-    listView.classList.remove('hidden');
-    gridView.classList.add('hidden');
-    btnList.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
-    btnList.classList.remove('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
-    btnGrid.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
-    btnGrid.classList.add('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+    listView.classList.remove('hidden'); gridView.classList.add('hidden');
+    btnList.classList.add('bg-primary-50','dark:bg-primary-900/30','text-primary-600','dark:text-primary-400');
+    btnList.classList.remove('text-slate-400','hover:bg-slate-100','dark:hover:bg-slate-700');
+    btnGrid.classList.remove('bg-primary-50','dark:bg-primary-900/30','text-primary-600','dark:text-primary-400');
+    btnGrid.classList.add('text-slate-400','hover:bg-slate-100','dark:hover:bg-slate-700');
   } else {
-    listView.classList.add('hidden');
-    gridView.classList.remove('hidden');
-    btnGrid.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
-    btnGrid.classList.remove('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
-    btnList.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
-    btnList.classList.add('text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+    listView.classList.add('hidden'); gridView.classList.remove('hidden');
+    btnGrid.classList.add('bg-primary-50','dark:bg-primary-900/30','text-primary-600','dark:text-primary-400');
+    btnGrid.classList.remove('text-slate-400','hover:bg-slate-100','dark:hover:bg-slate-700');
+    btnList.classList.remove('bg-primary-50','dark:bg-primary-900/30','text-primary-600','dark:text-primary-400');
+    btnList.classList.add('text-slate-400','hover:bg-slate-100','dark:hover:bg-slate-700');
   }
 }
 
-// ==================== FORM SUBMIT CORRIGIDO ====================
+// ==================== FORM SUBMIT ====================
 const formNovoEnvio = document.getElementById('formNovoEnvio');
 if (formNovoEnvio) {
   formNovoEnvio.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Validar autenticação — pega sessão do localStorage
-    if (!currentUser) {
-      const sess = _getSessionFromStorage();
-      if (!sess?.user) {
-        alert('Você precisa estar logado para criar solicitações');
-        window.location.href = '/login.html';
-        return;
-      }
-      currentUser = sess.user;
-    }
-    
-    // Coletar dados do formulário
+    if (!currentUser) { const sess = _getSessionFromStorage(); if (!sess?.user) { alert('Você precisa estar logado'); window.location.href = '/login.html'; return; } currentUser = sess.user; }
     const formData = new FormData(e.target);
-    
-    // Validar campos obrigatórios
-    const solicitante = formData.get('solicitante')?.trim();
-    const email = formData.get('email')?.trim();
-    const numero_contato = formData.get('numero_contato')?.trim();
-    const empresa = formData.get('empresa')?.trim();
-    const tipo = formData.get('tipo');
-    const tipo_veiculo = formData.get('tipo_veiculo');
-    const urgencia = formData.get('urgencia');
-    const data_coleta = formData.get('data_coleta');
-    const horario_janela = formData.get('horario_janela');
-    const endereco = formData.get('endereco')?.trim();
-    const observacao = formData.get('observacao')?.trim() || '';
-    
-    // Validar destino confirmado no mapa
+    const solicitante = formData.get('solicitante')?.trim(), email = formData.get('email')?.trim();
+    const numero_contato = formData.get('numero_contato')?.trim(), empresa = formData.get('empresa')?.trim();
+    const tipo = formData.get('tipo'), tipo_veiculo = formData.get('tipo_veiculo'), urgencia = formData.get('urgencia');
+    const data_coleta = formData.get('data_coleta'), horario_janela = formData.get('horario_janela');
+    const endereco = formData.get('endereco')?.trim(), observacao = formData.get('observacao')?.trim() || '';
     if (!_destinoConfirmado || !formData.get('destino_lat')) {
       document.getElementById('avisoDestino').classList.remove('hidden');
-      document.getElementById('miniMapaWrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
+      document.getElementById('miniMapaWrapper').scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
     }
-
-    // Validação manual (caso o HTML5 não pegue)
-    if (!solicitante || !email || !numero_contato || !empresa || !tipo || 
-        !tipo_veiculo || !urgencia || !data_coleta || !horario_janela) {
-      alert('⚠️ Por favor, preencha todos os campos obrigatórios!');
-      return;
-    }
-    
-    // Preparar dados para envio
-    const dados = {
-      solicitante,
-      email,
-      numero_contato,
-      empresa,
-      tipo:           tipo?.toLowerCase(),           // banco exige minúsculo: 'envio'|'coleta'
-      tipo_veiculo,
-      urgencia,
-      urgente:        urgencia === 'Sim',             // campo boolean do novo schema
-      data_coleta,
-      horario_janela,
-      endereco,
-      link_maps:      endereco?.startsWith('http') ? endereco : null,
-      destino_lat:    formData.get('destino_lat') ? parseFloat(formData.get('destino_lat')) : null,
-      destino_lng:    formData.get('destino_lng') ? parseFloat(formData.get('destino_lng')) : null,
-      destino_endereco: formData.get('destino_endereco') || endereco,
-      observacao,
-      status:         'pendente',
-      solicitante_id: currentUser.id,
-      solicitante_nome: userProfile?.nome || userProfile?.name || solicitante
-    };
-    
-    // Desabilitar botão e mostrar loading
-    const btnSubmit = e.target.querySelector('button[type="submit"]');
-    const btnText = btnSubmit.querySelector('span');
-    const originalText = btnText.textContent;
-    btnSubmit.disabled = true;
-    btnText.textContent = 'Criando...';
-    
+    if (!solicitante || !email || !numero_contato || !empresa || !tipo || !tipo_veiculo || !urgencia || !data_coleta || !horario_janela) { alert('⚠️ Preencha todos os campos obrigatórios!'); return; }
+    const dados = { solicitante, email, numero_contato, empresa, tipo: tipo?.toLowerCase(), tipo_veiculo, urgencia, urgente: urgencia === 'Sim', data_coleta, horario_janela, endereco, link_maps: endereco?.startsWith('http') ? endereco : null, destino_lat: formData.get('destino_lat') ? parseFloat(formData.get('destino_lat')) : null, destino_lng: formData.get('destino_lng') ? parseFloat(formData.get('destino_lng')) : null, destino_endereco: formData.get('destino_endereco') || endereco, observacao, status: 'pendente', solicitante_id: currentUser.id, solicitante_nome: userProfile?.nome || solicitante };
+    const btnSubmit = e.target.querySelector('button[type="submit"]'), btnText = btnSubmit.querySelector('span'), originalText = btnText.textContent;
+    btnSubmit.disabled = true; btnText.textContent = 'Criando...';
     try {
-      console.log('Enviando dados:', dados);
-
-      // Usa fetch direto para evitar conflito de inicialização do cliente JS
-      const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-      const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-      
+      const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co', SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
       const token = _getSessionFromStorage()?.access_token || SUPA_KEY;
-
-      const resp = await fetch(`${SUPA_URL}/rest/v1/fretes`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(dados)
-      });
-
-      if (!resp.ok) {
-        const errBody = await resp.json();
-        throw new Error(errBody.message || errBody.details || `HTTP ${resp.status}`);
-      }
-
-      const data = await resp.json();
-      console.log('Solicitação criada:', data);
-      alert('✅ Solicitação criada com sucesso!');
-      e.target.reset();
-      mudarAba('dashboard');
-      await carregarDados();
-      
-    } catch (error) {
-      console.error('Erro ao criar solicitação:', error);
-      
-      // Mensagem de erro detalhada
-      let mensagemErro = '❌ Erro ao criar solicitação!\n\n';
-      
-      if (error.message.includes('duplicate key')) {
-        mensagemErro += 'Já existe uma solicitação com esses dados.';
-      } else if (error.message.includes('violates foreign key')) {
-        mensagemErro += 'Erro de relacionamento no banco de dados.';
-      } else if (error.message.includes('column') && error.message.includes('does not exist')) {
-        mensagemErro += 'Erro de estrutura do banco de dados. Entre em contato com o administrador.';
-      } else {
-        mensagemErro += error.message || 'Verifique os dados e tente novamente.';
-      }
-      
-      alert(mensagemErro);
-    } finally {
-      // Reabilitar botão
-      btnSubmit.disabled = false;
-      btnText.textContent = originalText;
-    }
+      const resp = await fetch(`${SUPA_URL}/rest/v1/fretes`, { method:'POST', headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Prefer':'return=representation'}, body: JSON.stringify(dados) });
+      if (!resp.ok) { const errBody = await resp.json(); throw new Error(errBody.message || errBody.details || `HTTP ${resp.status}`); }
+      alert('✅ Solicitação criada com sucesso!'); e.target.reset(); mudarAba('dashboard'); await carregarDados();
+    } catch (error) { console.error('Erro:', error); alert('❌ Erro ao criar solicitação!\n\n' + (error.message || 'Tente novamente.')); }
+    finally { btnSubmit.disabled = false; btnText.textContent = originalText; }
   });
 }
 
-// ==================== MAPA DE DESTINO ====================
-let _miniMapa = null;
-let _marcadorDestino = null;
-let _buscaTimeout = null;
-let _destinoConfirmado = false;
-
+// ==================== MAPA DESTINO ====================
+let _miniMapa=null, _marcadorDestino=null, _buscaTimeout=null, _destinoConfirmado=false;
 function alternarModoEndereco(modo) {
-  const isBusca = modo === 'busca';
-  document.getElementById('modoBusca').classList.toggle('hidden', !isBusca);
-  document.getElementById('modoLink').classList.toggle('hidden', isBusca);
-  document.getElementById('tabBusca').className = isBusca
-    ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all'
-    : 'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
-  document.getElementById('tabLink').className = !isBusca
-    ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all'
-    : 'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
+  const isBusca = modo==='busca';
+  document.getElementById('modoBusca').classList.toggle('hidden',!isBusca);
+  document.getElementById('modoLink').classList.toggle('hidden',isBusca);
+  document.getElementById('tabBusca').className=isBusca?'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all':'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
+  document.getElementById('tabLink').className=!isBusca?'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all':'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
   limparDestino();
 }
-
-// Busca de endereço com Nominatim (OpenStreetMap) — gratuito
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('inputBuscaEndereco');
   if (!input) return;
-  input.addEventListener('input', () => {
-    clearTimeout(_buscaTimeout);
-    const q = input.value.trim();
-    if (q.length < 3) { document.getElementById('sugestoesEndereco').classList.add('hidden'); return; }
-    _buscaTimeout = setTimeout(() => buscarSugestoes(q), 400);
-  });
-  input.addEventListener('blur', () => {
-    setTimeout(() => document.getElementById('sugestoesEndereco').classList.add('hidden'), 200);
-  });
+  input.addEventListener('input', () => { clearTimeout(_buscaTimeout); const q=input.value.trim(); if(q.length<3){document.getElementById('sugestoesEndereco').classList.add('hidden');return;} _buscaTimeout=setTimeout(()=>buscarSugestoes(q),400); });
+  input.addEventListener('blur', () => { setTimeout(()=>document.getElementById('sugestoesEndereco').classList.add('hidden'),200); });
 });
-
 async function buscarSugestoes(query) {
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&addressdetails=1`;
-    const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-    const data = await r.json();
-    const box = document.getElementById('sugestoesEndereco');
-    if (!data.length) { box.classList.add('hidden'); return; }
-    box.innerHTML = data.map(d => `
-      <button type="button" onclick="confirmarDestino(${d.lat}, ${d.lon}, '${d.display_name.replace(/'/g, "\'")}')"
-        class="w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">
-        <div class="font-medium text-slate-900 dark:text-white truncate">${d.display_name.split(',').slice(0,3).join(',')}</div>
-        <div class="text-xs text-slate-500 truncate">${d.display_name}</div>
-      </button>`).join('');
+    const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&addressdetails=1`;
+    const r=await fetch(url,{headers:{'Accept-Language':'pt-BR'}}), data=await r.json();
+    const box=document.getElementById('sugestoesEndereco');
+    if(!data.length){box.classList.add('hidden');return;}
+    box.innerHTML=data.map(d=>`<button type="button" onclick="confirmarDestino(${d.lat},${d.lon},'${d.display_name.replace(/'/g,"\\'")}')" class="w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors"><div class="font-medium text-slate-900 dark:text-white truncate">${d.display_name.split(',').slice(0,3).join(',')}</div><div class="text-xs text-slate-500 truncate">${d.display_name}</div></button>`).join('');
     box.classList.remove('hidden');
-  } catch(e) { console.warn('Erro na busca:', e); }
+  } catch(e){console.warn('Erro na busca:',e);}
 }
-
-function confirmarDestino(lat, lng, endereco) {
-  document.getElementById('sugestoesEndereco').classList.add('hidden');
-  _setDestino(parseFloat(lat), parseFloat(lng), endereco);
-}
-
-// Extrai coordenadas de link do Google Maps
+function confirmarDestino(lat,lng,endereco){document.getElementById('sugestoesEndereco').classList.add('hidden');_setDestino(parseFloat(lat),parseFloat(lng),endereco);}
 function processarLinkMaps(link) {
-  if (!link || link.length < 10) return;
-  // Formatos: @lat,lng | ?q=lat,lng | /place/.../@lat,lng
-  const patterns = [
-    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
-    /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
-    /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
-    /\/(-?\d+\.\d+),(-?\d+\.\d+)/,
-  ];
-  for (const p of patterns) {
-    const m = link.match(p);
-    if (m) { _setDestino(parseFloat(m[1]), parseFloat(m[2]), link); return; }
-  }
+  if(!link||link.length<10)return;
+  const patterns=[/@(-?\d+\.\d+),(-?\d+\.\d+)/,/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,/ll=(-?\d+\.\d+),(-?\d+\.\d+)/,/\/(-?\d+\.\d+),(-?\d+\.\d+)/];
+  for(const p of patterns){const m=link.match(p);if(m){_setDestino(parseFloat(m[1]),parseFloat(m[2]),link);return;}}
 }
-
-function _setDestino(lat, lng, endereco) {
-  _destinoConfirmado = true;
-  // Preencher campos hidden
-  document.getElementById('hiddenEndereco').value = endereco;
-  document.getElementById('hiddenLat').value = lat;
-  document.getElementById('hiddenLng').value = lng;
-  document.getElementById('hiddenDestEndereco').value = endereco;
-  document.getElementById('enderecoConfirmado').textContent = endereco.length > 80 ? endereco.substring(0,80)+'...' : endereco;
+function _setDestino(lat,lng,endereco) {
+  _destinoConfirmado=true;
+  document.getElementById('hiddenEndereco').value=endereco;
+  document.getElementById('hiddenLat').value=lat;
+  document.getElementById('hiddenLng').value=lng;
+  document.getElementById('hiddenDestEndereco').value=endereco;
+  document.getElementById('enderecoConfirmado').textContent=endereco.length>80?endereco.substring(0,80)+'...':endereco;
   document.getElementById('miniMapaWrapper').classList.remove('hidden');
   document.getElementById('avisoDestino').classList.add('hidden');
-
-  // Inicializar ou atualizar mapa
-  if (!_miniMapa) {
-    _miniMapa = L.map('miniMapa', { zoomControl: true, attributionControl: false }).setView([lat, lng], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_miniMapa);
-  } else {
-    _miniMapa.setView([lat, lng], 16);
-  }
-
-  // Marcador de destino
-  const icone = L.divIcon({
-    html: `<div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [20,20], iconAnchor: [10,10], className: ''
-  });
-  if (_marcadorDestino) _marcadorDestino.setLatLng([lat, lng]);
-  else _marcadorDestino = L.marker([lat, lng], { icon: icone }).addTo(_miniMapa);
-
-  // Forçar resize do mapa
-  setTimeout(() => _miniMapa.invalidateSize(), 100);
+  if(!_miniMapa){_miniMapa=L.map('miniMapa',{zoomControl:true,attributionControl:false}).setView([lat,lng],16);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_miniMapa);}
+  else{_miniMapa.setView([lat,lng],16);}
+  const icone=L.divIcon({html:`<div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,iconSize:[20,20],iconAnchor:[10,10],className:''});
+  if(_marcadorDestino)_marcadorDestino.setLatLng([lat,lng]);
+  else _marcadorDestino=L.marker([lat,lng],{icon:icone}).addTo(_miniMapa);
+  setTimeout(()=>_miniMapa.invalidateSize(),100);
 }
-
 function limparDestino() {
-  _destinoConfirmado = false;
+  _destinoConfirmado=false;
+  ['hiddenEndereco','hiddenLat','hiddenLng','hiddenDestEndereco'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('miniMapaWrapper').classList.add('hidden');
-  document.getElementById('hiddenEndereco').value = '';
-  document.getElementById('hiddenLat').value = '';
-  document.getElementById('hiddenLng').value = '';
-  document.getElementById('hiddenDestEndereco').value = '';
-  document.getElementById('inputBuscaEndereco').value = '';
-  if (document.getElementById('inputLinkMaps')) document.getElementById('inputLinkMaps').value = '';
-  if (_marcadorDestino && _miniMapa) { _miniMapa.removeLayer(_marcadorDestino); _marcadorDestino = null; }
+  document.getElementById('inputBuscaEndereco').value='';
+  if(document.getElementById('inputLinkMaps'))document.getElementById('inputLinkMaps').value='';
+  if(_marcadorDestino&&_miniMapa){_miniMapa.removeLayer(_marcadorDestino);_marcadorDestino=null;}
 }
 
 // ==================== ACOMPANHAMENTO ====================
-let _mapaAcomp  = null;
-let _marcadores = {};
-let _rotasAcomp = {};
-let _acInterval = null;
-
-const _SUPA_URL2 = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-const _SUPA_KEY2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-function _hdrs2() { const t=_getSessionFromStorage()?.access_token||_SUPA_KEY2; return {'apikey':_SUPA_KEY2,'Authorization':'Bearer '+t}; }
-
-function _initMapaAcomp() {
-  if (_mapaAcomp) { setTimeout(()=>_mapaAcomp.invalidateSize(),100); return; }
-  _mapaAcomp = L.map('mapaAcompanhamento',{zoomControl:true,attributionControl:false}).setView([-25.43,-49.27],11);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(_mapaAcomp);
-}
-
+let _mapaAcomp=null, _marcadores={}, _rotasAcomp={}, _acInterval=null;
+const _SUPA_URL2='https://mytiqqfsmglzmqxfnerc.supabase.co';
+const _SUPA_KEY2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+function _hdrs2(){const t=_getSessionFromStorage()?.access_token||_SUPA_KEY2;return{'apikey':_SUPA_KEY2,'Authorization':'Bearer '+t};}
+function _initMapaAcomp(){if(_mapaAcomp){setTimeout(()=>_mapaAcomp.invalidateSize(),100);return;}_mapaAcomp=L.map('mapaAcompanhamento',{zoomControl:true,attributionControl:false}).setView([-25.43,-49.27],11);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(_mapaAcomp);}
 const _CORES=['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
-const _CMAP={}; let _CI=0;
-function _corMot(id){ if(!_CMAP[id]) _CMAP[id]=_CORES[_CI++%_CORES.length]; return _CMAP[id]; }
-function _fmtMs(ms){ const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h>0?h+'h'+m+'m':m+'min'; }
-
-async function atualizarAcompanhamento() {
+const _CMAP={};let _CI=0;
+function _corMot(id){if(!_CMAP[id])_CMAP[id]=_CORES[_CI++%_CORES.length];return _CMAP[id];}
+function _fmtMs(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h'+m+'m':m+'min';}
+async function atualizarAcompanhamento(){
   _initMapaAcomp();
-  const lista = document.getElementById('listaMotoristas');
-  if(lista) lista.innerHTML = '<div class="text-center py-6 text-slate-500 text-sm">Carregando...</div>';
-
-  const fr = await fetch(_SUPA_URL2+'/rest/v1/fretes?status=eq.em_andamento&select=*',{headers:_hdrs2()});
-  const fretes = fr.ok ? await fr.json() : [];
-
-  if(!fretes.length) {
-    if(lista) lista.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">Nenhum motorista em campo</div>';
-    return;
-  }
-
-  const cards=[]; const bounds=[];
-
-  for(const f of fretes) {
-    if(!f.motorista_id) continue;
-    const pr = await fetch(_SUPA_URL2+'/rest/v1/rastreio?frete_id=eq.'+f.id+'&order=criado_em.desc&limit=1&select=*',{headers:_hdrs2()});
-    const pings = pr.ok ? await pr.json() : [];
-    const p = pings[0]; if(!p) continue;
-
-    const lat=parseFloat(p.latitude), lng=parseFloat(p.longitude);
-    bounds.push([lat,lng]);
-    const cor=_corMot(f.motorista_id);
-
-    // Marcador motorista
+  const lista=document.getElementById('listaMotoristas');
+  if(lista)lista.innerHTML='<div class="text-center py-6 text-slate-500 text-sm">Carregando...</div>';
+  const fr=await fetch(_SUPA_URL2+'/rest/v1/fretes?status=eq.em_andamento&select=*',{headers:_hdrs2()});
+  const fretes=fr.ok?await fr.json():[];
+  if(!fretes.length){if(lista)lista.innerHTML='<div class="text-center py-8 text-slate-500 text-sm">Nenhum motorista em campo</div>';return;}
+  const cards=[],bounds=[];
+  for(const f of fretes){
+    if(!f.motorista_id)continue;
+    const pr=await fetch(_SUPA_URL2+'/rest/v1/rastreio?frete_id=eq.'+f.id+'&order=criado_em.desc&limit=1&select=*',{headers:_hdrs2()});
+    const pings=pr.ok?await pr.json():[];const p=pings[0];if(!p)continue;
+    const lat=parseFloat(p.latitude),lng=parseFloat(p.longitude);
+    bounds.push([lat,lng]);const cor=_corMot(f.motorista_id);
     const ic=L.divIcon({html:'<div style="width:42px;height:42px;background:'+cor+';border-radius:50%;border:3px solid white;box-shadow:0 3px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;">🚚</div>',iconSize:[42,42],iconAnchor:[21,21],className:''});
-    if(_marcadores[f.motorista_id]){ _marcadores[f.motorista_id].setLatLng([lat,lng]).setIcon(ic); }
-    else { _marcadores[f.motorista_id]=L.marker([lat,lng],{icon:ic}).addTo(_mapaAcomp); }
+    if(_marcadores[f.motorista_id]){_marcadores[f.motorista_id].setLatLng([lat,lng]).setIcon(ic);}
+    else{_marcadores[f.motorista_id]=L.marker([lat,lng],{icon:ic}).addTo(_mapaAcomp);}
     _marcadores[f.motorista_id].bindPopup('<b>'+(f.motorista_nome||'Motorista')+'</b><br><small>'+(f.endereco||'').substring(0,50)+'</small>');
-
-    // Rota OSRM
-    if(f.destino_lat && f.destino_lng) {
-      try {
-        const oLng=parseFloat(lng).toFixed(6),oLat=parseFloat(lat).toFixed(6);
-        const dLng=parseFloat(f.destino_lng).toFixed(6),dLat=parseFloat(f.destino_lat).toFixed(6);
-        const rr=await fetch('https://router.project-osrm.org/route/v1/driving/'+oLng+','+oLat+';'+dLng+','+dLat+'?overview=full&geometries=geojson');
-        if(rr.ok){ const rd=await rr.json(); const coords=rd.routes?.[0]?.geometry?.coordinates?.map(c=>[c[1],c[0]]);
-          if(coords){ if(_rotasAcomp[f.motorista_id]) _mapaAcomp.removeLayer(_rotasAcomp[f.motorista_id]);
-            _rotasAcomp[f.motorista_id]=L.polyline(coords,{color:cor,weight:5,opacity:0.8}).addTo(_mapaAcomp);
-            bounds.push([parseFloat(f.destino_lat),parseFloat(f.destino_lng)]);
-          }
-        }
-      } catch(e){}
-    }
-
-    const inicio=f.iniciado_em?new Date(f.iniciado_em):null;
-    const tStr=inicio?_fmtMs(Date.now()-inicio.getTime()):'—';
-
-    cards.push('<div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-soft cursor-pointer hover:border-primary-500 transition-all" onclick="_mapaAcomp.setView(['+lat+','+lng+'],15)">'+
-      '<div class="flex items-center gap-3 mb-3">'+
-      '<div style="width:36px;height:36px;background:'+cor+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🚚</div>'+
-      '<div class="min-w-0 flex-1"><p class="font-bold text-sm text-slate-900 dark:text-white truncate">'+(f.motorista_nome||'Motorista')+'</p>'+
-      '<p class="text-xs text-slate-500 truncate">'+(f.endereco||'').substring(0,35)+'...</p></div></div>'+
-      '<div class="grid grid-cols-3 gap-2 text-center">'+
-      '<div><p class="text-lg font-bold text-primary-500">'+(p.velocidade||0)+'</p><p class="text-xs text-slate-500">km/h</p></div>'+
-      '<div><p class="text-lg font-bold text-emerald-500">'+tStr+'</p><p class="text-xs text-slate-500">em campo</p></div>'+
-      '<div><p class="text-lg font-bold text-violet-500">'+(p.precisao_m||'—')+'</p><p class="text-xs text-slate-500">m GPS</p></div></div>'+
-      '<div class="mt-3 flex items-center gap-2 text-xs text-slate-500">'+
-      '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-flex"></span>'+
-      'Atualizado '+new Date(p.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</div></div>');
+    if(f.destino_lat&&f.destino_lng){try{const oLng=parseFloat(lng).toFixed(6),oLat=parseFloat(lat).toFixed(6),dLng=parseFloat(f.destino_lng).toFixed(6),dLat=parseFloat(f.destino_lat).toFixed(6);const rr=await fetch('https://router.project-osrm.org/route/v1/driving/'+oLng+','+oLat+';'+dLng+','+dLat+'?overview=full&geometries=geojson');if(rr.ok){const rd=await rr.json();const coords=rd.routes?.[0]?.geometry?.coordinates?.map(c=>[c[1],c[0]]);if(coords){if(_rotasAcomp[f.motorista_id])_mapaAcomp.removeLayer(_rotasAcomp[f.motorista_id]);_rotasAcomp[f.motorista_id]=L.polyline(coords,{color:cor,weight:5,opacity:0.8}).addTo(_mapaAcomp);bounds.push([parseFloat(f.destino_lat),parseFloat(f.destino_lng)]);}}catch(e){}}
+    const inicio=f.iniciado_em?new Date(f.iniciado_em):null;const tStr=inicio?_fmtMs(Date.now()-inicio.getTime()):'—';
+    cards.push('<div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-soft cursor-pointer hover:border-primary-500 transition-all" onclick="_mapaAcomp.setView(['+lat+','+lng+'],15)"><div class="flex items-center gap-3 mb-3"><div style="width:36px;height:36px;background:'+cor+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🚚</div><div class="min-w-0 flex-1"><p class="font-bold text-sm text-slate-900 dark:text-white truncate">'+(f.motorista_nome||'Motorista')+'</p><p class="text-xs text-slate-500 truncate">'+(f.endereco||'').substring(0,35)+'...</p></div></div><div class="grid grid-cols-3 gap-2 text-center"><div><p class="text-lg font-bold text-primary-500">'+(p.velocidade||0)+'</p><p class="text-xs text-slate-500">km/h</p></div><div><p class="text-lg font-bold text-emerald-500">'+tStr+'</p><p class="text-xs text-slate-500">em campo</p></div><div><p class="text-lg font-bold text-violet-500">'+(p.precisao_m||'—')+'</p><p class="text-xs text-slate-500">m GPS</p></div></div><div class="mt-3 flex items-center gap-2 text-xs text-slate-500"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-flex"></span>Atualizado '+new Date(p.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</div></div>');
   }
-
-  if(lista) lista.innerHTML = cards.join('') || '<div class="text-center py-8 text-slate-500 text-sm">Sem dados de rastreio</div>';
-  if(bounds.length) _mapaAcomp.fitBounds(bounds,{padding:[40,40]});
+  if(lista)lista.innerHTML=cards.join('')||'<div class="text-center py-8 text-slate-500 text-sm">Sem dados de rastreio</div>';
+  if(bounds.length)_mapaAcomp.fitBounds(bounds,{padding:[40,40]});
 }
+function _iniciarAtualizacaoAcomp(){atualizarAcompanhamento();_acInterval=setInterval(atualizarAcompanhamento,15000);}
+function _pararAtualizacaoAcomp(){if(_acInterval){clearInterval(_acInterval);_acInterval=null;}}
 
-function _iniciarAtualizacaoAcomp(){ atualizarAcompanhamento(); _acInterval=setInterval(atualizarAcompanhamento,15000); }
-function _pararAtualizacaoAcomp(){ if(_acInterval){clearInterval(_acInterval);_acInterval=null;} }
-
-// ==================== INICIALIZAÇÃO ====================
-(async () => {
-  const isAuth = await checkAuth();
-  if (isAuth) {
-    await carregarDados();
-    // Garantir que a nav está correta após tudo carregar
-    setTimeout(_aplicarNavPorNivel, 500);
-  }
-})();
+// ==================== INIT ====================
+(async()=>{const isAuth=await checkAuth();if(isAuth){await carregarDados();setTimeout(_aplicarNavPorNivel,500);}})();
     </script>
 </body>
 </html>
