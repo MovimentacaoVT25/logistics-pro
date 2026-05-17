@@ -987,36 +987,60 @@
     if (elInstr) elInstr.textContent = instrucao;
   }
 
-  // ── Rastreio GPS ───────────────────────────────────────────
+  // ── Rastreio GPS via watchPosition ────────────────────────
+  let _watchId = null;
+  let _ultimoPingEnviado = 0;
+
   function iniciarRastreio() {
-    if (rastreioInterval) return;
-    enviarPing(); // ping imediato
-    rastreioInterval = setInterval(enviarPing, 10000); // a cada 10s
+    if (_watchId !== null) return;
+    if (!navigator.geolocation) {
+      showToast('GPS não disponível neste dispositivo', 'error');
+      return;
+    }
+
+    _watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy, speed, heading } = pos.coords;
+
+        // Atualizar mapa em tempo real
+        atualizarMapa(latitude, longitude, heading);
+
+        // Velocidade na UI
+        const velKmh = speed ? Math.round(speed * 3.6) : 0;
+        const elVel = document.getElementById('navVelocidade');
+        if (elVel) elVel.textContent = velKmh;
+
+        // Enviar ping ao banco a cada 10s (não a cada update do GPS)
+        const agora = Date.now();
+        if (agora - _ultimoPingEnviado >= 10000) {
+          _ultimoPingEnviado = agora;
+          const perfil = await _getPerfil();
+          if (perfil && freteAtivo) {
+            await _sbPost('/rest/v1/rastreio', {
+              frete_id:     freteAtivo.id,
+              motorista_id: perfil.id,
+              latitude, longitude,
+              precisao_m:  accuracy ? Math.round(accuracy) : null,
+              velocidade:  speed    ? Math.round(speed * 3.6) : null,
+              rumo:        heading  || null
+            });
+          }
+        }
+      },
+      (err) => {
+        console.warn('[GPS] Erro:', err.message);
+        document.getElementById('statusDot').style.background = '#f59e0b';
+        document.getElementById('statusLabel').textContent = 'GPS off';
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
   }
 
   function pararRastreio() {
-    if (rastreioInterval) { clearInterval(rastreioInterval); rastreioInterval = null; }
-  }
-
-  async function enviarPing() {
-    if (!freteAtivo || !navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const { latitude, longitude, accuracy, speed, heading } = pos.coords;
-
-      atualizarMapa(latitude, longitude, heading);
-      
-      // Atualizar velocidade na UI
-      const velKmh = speed ? Math.round(speed * 3.6) : 0;
-      const elVel = document.getElementById('navVelocidade');
-      if (elVel) elVel.textContent = velKmh;
-
-      await _sbPost('/rest/v1/rastreio',{frete_id:freteAtivo.id,motorista_id:(await _getPerfil())?.id,latitude,longitude,precisao_m:accuracy?Math.round(accuracy):null,velocidade:speed?Math.round(speed*3.6):null,rumo:heading||null});
-    }, (err) => {
-      console.warn('[Rastreio] GPS indisponível:', err.message);
-      document.getElementById('statusDot').style.background = '#f59e0b';
-      document.getElementById('statusLabel').textContent    = 'GPS off';
-    }, { enableHighAccuracy: true, timeout: 8000 });
+    if (_watchId !== null) {
+      navigator.geolocation.clearWatch(_watchId);
+      _watchId = null;
+    }
   }
 
   // ── Histórico ──────────────────────────────────────────────
