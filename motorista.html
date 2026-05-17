@@ -552,8 +552,6 @@
   }
 
   // ── Estado global ──────────────────────────────────────────
-  const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjE5MTBkOGFkMjc1NzQzZWQ4ZmE3Njk1NDA0MWE1MWEzIiwiaCI6Im11cm11cjY0In0=';
-
   let freteAtivo        = null;
   let mapa              = null;
   let marcadorMotorista = null;
@@ -901,68 +899,71 @@
     }
   }
 
-  // ── Rota OpenRouteService ──────────────────────────────────
+  // ── Rota via OSRM (gratuito, sem CORS) ────────────────────
   let _rotaTimeout = null;
+  let _ultimaRotaCalc = 0;
+
   async function calcularRota(oLat, oLng, dLat, dLng) {
-    // Limitar chamadas: só recalcula a cada 30s ou se desviou >50m
     clearTimeout(_rotaTimeout);
     _rotaTimeout = setTimeout(async () => {
+      // Limitar: recalcular no máximo a cada 30s
+      if (Date.now() - _ultimaRotaCalc < 30000) return;
+      _ultimaRotaCalc = Date.now();
       try {
-        const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
-          method: 'POST',
-          headers: { 'Authorization': ORS_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coordinates: [[oLng, oLat], [dLng, dLat]],
-            instructions: true,
-            language: 'pt-BR',
-            units: 'km'
-          })
-        });
-
-        if (!r.ok) return;
+        // OSRM — gratuito, sem chave, sem restrição CORS
+        const url = `https://router.project-osrm.org/route/v1/driving/${oLng},${oLat};${dLng},${dLat}?overview=full&geometries=geojson&steps=true&language=pt`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('OSRM ' + r.status);
         const data = await r.json();
         const route = data.routes?.[0];
         if (!route) return;
 
-        // Decodificar polyline
-        const coords = decodePolyline(route.geometry);
+        // Extrair coordenadas GeoJSON
+        const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
 
         // Desenhar rota no mapa
-        if (polylineRota) mapa.removeLayer(polylineRota);
-        polylineRota = L.polyline(coords, {
-          color: '#6366f1',
-          weight: 6,
-          opacity: 0.9,
-          lineJoin: 'round',
-          lineCap: 'round'
-        }).addTo(mapa);
+        if (polylineRota) {
+          polylineRota.forEach(l => mapa.removeLayer(l));
+        }
+        const shadow = L.polyline(coords, { color: '#312e81', weight: 10, opacity: 0.5, lineJoin: 'round' }).addTo(mapa);
+        const linha  = L.polyline(coords, { color: '#6366f1', weight: 6,  opacity: 1.0, lineJoin: 'round', lineCap: 'round' }).addTo(mapa);
+        polylineRota = [shadow, linha];
 
-        // Contorno da rota
-        L.polyline(coords, {
-          color: '#4338ca',
-          weight: 10,
-          opacity: 0.3,
-          lineJoin: 'round'
-        }).addTo(mapa);
-
-        // Info da rota
-        const seg = route.segments?.[0];
-        const distKm = (route.summary.distance).toFixed(1);
-        const minutos = Math.ceil(route.summary.duration / 60);
-        const horas = Math.floor(minutos / 60);
-        const mins = minutos % 60;
+        // Distância e tempo
+        const distKm  = (route.distance / 1000).toFixed(1);
+        const minutos = Math.ceil(route.duration / 60);
+        const horas   = Math.floor(minutos / 60);
+        const mins    = minutos % 60;
         const tempoStr = horas > 0 ? `${horas}h ${mins}min` : `${mins} min`;
 
-        // Próxima instrução
-        const steps = seg?.steps || [];
-        const proxStep = steps.find(s => s.distance > 0);
-        instrucaoAtual = proxStep?.instruction || 'Siga em frente';
+        // Próxima instrução do step
+        const legs  = route.legs?.[0];
+        const steps = legs?.steps || [];
+        const proxStep = steps.find(s => s.distance > 10 && s.maneuver?.type !== 'depart');
+        const tipos = {
+          'turn': { left: '↰ Vire à esquerda', right: '↱ Vire à direita', 'sharp left': '↰ Curva fechada esquerda', 'sharp right': '↱ Curva fechada direita', straight: '↑ Siga em frente' },
+          'new name': { straight: '↑ Continue em frente' },
+          'arrive': { left: '🏁 Destino à esquerda', right: '🏁 Destino à direita', straight: '🏁 Você chegou!' },
+          'roundabout': { straight: '⭕ Entre na rotatória' },
+        };
+        const type = proxStep?.maneuver?.type || 'continue';
+        const mod  = proxStep?.maneuver?.modifier || 'straight';
+        instrucaoAtual = tipos[type]?.[mod] || tipos[type]?.straight || '↑ Siga em frente';
+        if (proxStep?.name) instrucaoAtual += ' — ' + proxStep.name;
 
-        // Atualizar UI de navegação
         atualizarUINavegacao(distKm, tempoStr, instrucaoAtual);
 
-      } catch(e) { console.warn('[Rota] Erro:', e.message); }
-    }, 2000); // debounce 2s
+      } catch(e) {
+        console.warn('[Rota] Erro OSRM:', e.message);
+        // Fallback: linha reta ao destino
+        if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
+          const coords = [[oLat, oLng], [freteAtivo.destino_lat, freteAtivo.destino_lng]];
+          if (polylineRota) polylineRota.forEach(l => mapa.removeLayer(l));
+          polylineRota = [L.polyline(coords, { color: '#6366f1', weight: 4, dashArray: '8,8' }).addTo(mapa)];
+          atualizarUINavegacao('—', '—', '↑ Siga em direção ao destino');
+        }
+      }
+    }, 1500);
   }
 
   // Decodificar Google Encoded Polyline
