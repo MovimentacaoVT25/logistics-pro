@@ -579,10 +579,14 @@
 const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-});
+// Reutiliza o cliente singleton do auth.js se disponível
+if (!window._supabaseClient) {
+  const { createClient } = window.supabase;
+  window._supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+}
+const supabaseClient = window._supabaseClient;
 
 let currentUser = null;
 let userProfile = null;
@@ -621,10 +625,10 @@ async function loadUserProfile() {
       console.error('Erro ao carregar perfil:', error);
     }
     
-    userProfile = data || { nivel: 1, name: currentUser.email.split('@')[0] };
+    userProfile = data || { nivel: 1, nome: currentUser.email.split('@')[0] };
     
     // Atualizar UI
-    const name = userProfile.name || currentUser.email.split('@')[0];
+    const name = userProfile.nome || userProfile.name || currentUser.email.split('@')[0];
     document.getElementById('userName').textContent = name;
     document.getElementById('userEmail').textContent = getNivelLabel(userProfile.nivel || 1);
     document.getElementById('userAvatar').textContent = name.substring(0, 2).toUpperCase();
