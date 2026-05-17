@@ -704,16 +704,16 @@ async function carregarDados() {
   }
   
   try {
-    const { data: fretes, error } = await supabaseClient
-      .from('fretes')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Erro ao carregar fretes:', error);
-      return;
-    }
-    
+    // Usa fetch direto para evitar conflito do cliente JS
+    const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const sessR = await supabaseClient.auth.getSession();
+    const tok = sessR.data.session?.access_token || SUPA_KEY;
+
+    const fretesResp = await fetch(`${SUPA_URL}/rest/v1/fretes?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${tok}` }
+    });
+    const fretes = fretesResp.ok ? await fretesResp.json() : [];
     allFretes = fretes || [];
     
     // Atualizar estatísticas
@@ -1064,17 +1064,31 @@ if (formNovoEnvio) {
     
     try {
       console.log('Enviando dados:', dados);
+
+      // Usa fetch direto para evitar conflito de inicialização do cliente JS
+      const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+      const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
       
-      const { data, error } = await supabaseClient
-        .from('fretes')
-        .insert([dados])
-        .select();
-      
-      if (error) {
-        console.error('Erro do Supabase:', error);
-        throw new Error(`[${error.code}] ${error.message}`);
+      const sessResp = await supabaseClient.auth.getSession();
+      const token = sessResp.data.session?.access_token || SUPA_KEY;
+
+      const resp = await fetch(`${SUPA_URL}/rest/v1/fretes`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(dados)
+      });
+
+      if (!resp.ok) {
+        const errBody = await resp.json();
+        throw new Error(errBody.message || errBody.details || `HTTP ${resp.status}`);
       }
-      
+
+      const data = await resp.json();
       console.log('Solicitação criada:', data);
       alert('✅ Solicitação criada com sucesso!');
       e.target.reset();
