@@ -19,18 +19,18 @@
 const SUPABASE_URL      = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
-// Inicializa o cliente (disponível globalmente como `supabase`)
-const { createClient } = window.supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    // Persiste sessão no localStorage do navegador
-    persistSession: true,
-    // Detecta token na URL (necessário para OAuth e magic link)
-    detectSessionInUrl: true,
-    // URL de retorno após login OAuth
-    redirectTo: window.location.origin + '/callback.html'
-  }
-});
+// Inicializa o cliente — guarda no window para evitar re-declaração entre páginas
+if (!window._supabaseClient) {
+  const { createClient } = window.supabase;
+  window._supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,
+      redirectTo: window.location.origin + '/callback.html'
+    }
+  });
+}
+var supabase = window._supabaseClient;
 
 // ------------------------------------------------------------
 // ESTADO GLOBAL DO USUÁRIO
