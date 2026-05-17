@@ -578,8 +578,8 @@
     const perfil = await _getPerfil();
     if (!perfil) { window.location.href = '/login.html'; return; }
 
-    // Verificar nível de acesso
-    if (perfil.nivel !== 4) {
+    // Verificar nível de acesso — nivel 4 (motorista) ou admin (3) podem acessar
+    if (perfil.nivel < 3) {
       window.location.href = '/app.html';
       return;
     }
