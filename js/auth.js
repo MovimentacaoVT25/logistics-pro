@@ -94,9 +94,9 @@ async function loginWithEmail(email, password) {
     return false;
   }
 
-  // Redireciona para onde o usuário tentou acessar, ou para o app
+  // Redireciona para onde o usuário tentou acessar, ou para o portal do seu nível
   const params   = new URLSearchParams(window.location.search);
-  const redirect = params.get('redirect') || '/app.html';
+  const redirect = params.get('redirect') || getRotaParaNivel(_currentProfile?.nivel ?? 1);
   window.location.href = redirect;
   return true;
 }
@@ -154,8 +154,8 @@ async function registerUser(email, password, metadata = {}) {
     return true;
   }
 
-  // Se está com confirmação desabilitada, já redireciona
-  window.location.href = '/app.html';
+  // Se está com confirmação desabilitada, já redireciona para portal correto
+  window.location.href = getRotaParaNivel(_currentProfile?.nivel ?? 1);
   return true;
 }
 
