@@ -571,11 +571,18 @@
 
   // ── Inicialização ──────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', async () => {
-    // Protege a rota: só motoristas (nivel=4)
-    await requireNivel(4);
+    // Verificar sessão via localStorage (não depende do _client que pode travar)
+    const sess = _getSession();
+    if (!sess?.user?.id) { window.location.href = '/login.html'; return; }
 
     const perfil = await _getPerfil();
     if (!perfil) { window.location.href = '/login.html'; return; }
+
+    // Verificar nível de acesso
+    if (perfil.nivel !== 4) {
+      window.location.href = '/app.html';
+      return;
+    }
 
     // Preenche UI do usuário
 
