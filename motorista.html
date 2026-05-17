@@ -311,16 +311,55 @@
             </div>
           </div>
 
-          <!-- Mapa de rastreio -->
+          <!-- Navegação estilo Waze -->
           <div id="mapaWrapper" class="hidden mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-sm font-semibold text-white flex items-center gap-2">
-                <span class="pulse-dot"></span>
-                Rastreio em tempo real
-              </p>
-              <span class="text-xs text-slate-500" id="ultimoPingLabel">—</span>
+
+            <!-- Instrução de navegação -->
+            <div id="navInstrucaoBox" style="background:linear-gradient(135deg,#6366f1,#4338ca);border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p id="navInstrucao" class="text-white font-bold text-sm truncate">Calculando rota...</p>
+                <p class="text-indigo-200 text-xs mt-0.5" id="ultimoPingLabel">Aguardando GPS...</p>
+              </div>
             </div>
-            <div id="mapa"></div>
+
+            <!-- Mapa principal -->
+            <div id="mapa" style="height:300px;border-radius:16px;overflow:hidden;position:relative;"></div>
+
+            <!-- Painel inferior estilo Waze -->
+            <div style="background:rgba(15,23,42,0.95);border-radius:16px;margin-top:10px;padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border:1px solid rgba(99,102,241,0.3);">
+              <!-- Velocidade -->
+              <div style="text-align:center;">
+                <div style="width:56px;height:56px;border-radius:50%;border:3px solid #6366f1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;">
+                  <span id="navVelocidade" style="font-size:1.2rem;font-weight:800;color:white;line-height:1;">0</span>
+                  <span style="font-size:0.55rem;color:#94a3b8;font-weight:600;">km/h</span>
+                </div>
+              </div>
+              <!-- Distância -->
+              <div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <p id="navDistancia" style="font-size:1.4rem;font-weight:800;color:#6366f1;line-height:1;">—</p>
+                <p style="font-size:0.65rem;color:#64748b;font-weight:600;margin-top:2px;">DISTÂNCIA</p>
+              </div>
+              <!-- Tempo -->
+              <div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <p id="navTempo" style="font-size:1.4rem;font-weight:800;color:#10b981;line-height:1;">—</p>
+                <p style="font-size:0.65rem;color:#64748b;font-weight:600;margin-top:2px;">CHEGADA</p>
+              </div>
+            </div>
+
+            <!-- Botão abrir no Google Maps -->
+            <a id="btnAbrirMaps" href="#" target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#94a3b8;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.2s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              Abrir no Google Maps
+            </a>
           </div>
 
           <!-- Botões de ação -->
@@ -513,14 +552,20 @@
   }
 
   // ── Estado global ──────────────────────────────────────────
-  let freteAtivo       = null;   // frete aceito/em andamento
-  let mapa             = null;   // instância Leaflet
-  let marcadorMotorista = null;  // marcador no mapa
-  let rastreioInterval = null;   // setInterval do ping GPS
-  let timerInterval    = null;   // setInterval do cronômetro
-  let timerInicio      = null;   // Date do início
-  let realtimeChannel  = null;   // canal Supabase Realtime
-  let disponivel       = true;
+  const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjE5MTBkOGFkMjc1NzQzZWQ4ZmE3Njk1NDA0MWE1MWEzIiwiaCI6Im11cm11cjY0In0=';
+
+  let freteAtivo        = null;
+  let mapa              = null;
+  let marcadorMotorista = null;
+  let marcadorDestino   = null;
+  let polylineRota      = null;
+  let rastreioInterval  = null;
+  let timerInterval     = null;
+  let timerInicio       = null;
+  let realtimeChannel   = null;
+  let disponivel        = true;
+  let posAtual          = null;  // {lat, lng} posição atual do motorista
+  let instrucaoAtual    = '';    // próxima instrução de navegação
 
   // ── Inicialização ──────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', async () => {
@@ -681,11 +726,17 @@
       document.getElementById('obsAtivoWrapper').classList.add('flex');
     }
 
-    if (f.link_maps) {
-      document.getElementById('linkMapsAtivo').href = f.link_maps;
-      document.getElementById('linkMapsAtivo').style.display = 'inline-flex';
+    if (f.link_maps || (f.destino_lat && f.destino_lng)) {
+      const mapsUrl = f.destino_lat
+        ? `https://www.google.com/maps/dir/?api=1&destination=${f.destino_lat},${f.destino_lng}&travelmode=driving`
+        : f.link_maps;
+      const linkEl = document.getElementById('linkMapsAtivo');
+      const btnMaps = document.getElementById('btnAbrirMaps');
+      if (linkEl) { linkEl.href = mapsUrl; linkEl.style.display = 'inline-flex'; }
+      if (btnMaps) btnMaps.href = mapsUrl;
     } else {
-      document.getElementById('linkMapsAtivo').style.display = 'none';
+      const linkEl = document.getElementById('linkMapsAtivo');
+      if (linkEl) linkEl.style.display = 'none';
     }
 
     // Badge de status
@@ -791,31 +842,152 @@
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   }
 
-  // ── Mapa Leaflet ───────────────────────────────────────────
+  // ── Mapa Leaflet estilo Waze ───────────────────────────────
   function iniciarMapa() {
-    if (mapa) return; // já iniciado
-    mapa = L.map('mapa', { zoomControl: true, attributionControl: false }).setView([-23.5, -48.0], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    if (mapa) return;
+    mapa = L.map('mapa', {
+      zoomControl: false,
+      attributionControl: false,
+      rotate: false
+    }).setView([-23.5, -48.0], 16);
+
+    // Tile escuro estilo navegação
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19
     }).addTo(mapa);
+
+    // Adicionar destino no mapa se frete tem coordenadas
+    if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
+      const iconeDestino = L.divIcon({
+        html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;background:#ef4444;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);transform:rotate(-45deg);"></div>`,
+        iconSize: [28,28], iconAnchor: [14,28], className: ''
+      });
+      marcadorDestino = L.marker([freteAtivo.destino_lat, freteAtivo.destino_lng], { icon: iconeDestino }).addTo(mapa);
+      marcadorDestino.bindPopup(`<b>Destino</b><br>${freteAtivo.destino_endereco || freteAtivo.endereco || ''}`);
+    }
   }
 
-  function atualizarMapa(lat, lng) {
+  function atualizarMapa(lat, lng, heading) {
     if (!mapa) return;
+    posAtual = { lat, lng };
     const pos = [lat, lng];
+
+    // Marcador do motorista — seta de direção
+    const rotacao = heading || 0;
+    const iconeMotorista = L.divIcon({
+      html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:30px solid #0ea5e9;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));transform:rotate(${rotacao}deg);"></div>
+      </div>`,
+      iconSize: [36,36], iconAnchor: [18,18], className: ''
+    });
+
     if (!marcadorMotorista) {
-      const icone = L.divIcon({
-        html: `<div style="width:16px;height:16px;border-radius:50%;background:#0ea5e9;border:3px solid white;box-shadow:0 0 0 3px rgba(14,165,233,0.4);"></div>`,
-        iconSize: [16, 16], iconAnchor: [8, 8], className: ''
-      });
-      marcadorMotorista = L.marker(pos, { icon: icone }).addTo(mapa);
+      marcadorMotorista = L.marker(pos, { icon: iconeMotorista }).addTo(mapa);
     } else {
       marcadorMotorista.setLatLng(pos);
+      marcadorMotorista.setIcon(iconeMotorista);
     }
-    mapa.panTo(pos, { animate: true, duration: 0.5 });
 
+    // Centralizar mapa no motorista
+    mapa.setView(pos, 16, { animate: true, duration: 0.8 });
+
+    // Atualizar label de ping
     const label = document.getElementById('ultimoPingLabel');
     if (label) label.textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    // Calcular rota se tem destino
+    if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
+      calcularRota(lat, lng, freteAtivo.destino_lat, freteAtivo.destino_lng);
+    }
+  }
+
+  // ── Rota OpenRouteService ──────────────────────────────────
+  let _rotaTimeout = null;
+  async function calcularRota(oLat, oLng, dLat, dLng) {
+    // Limitar chamadas: só recalcula a cada 30s ou se desviou >50m
+    clearTimeout(_rotaTimeout);
+    _rotaTimeout = setTimeout(async () => {
+      try {
+        const r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+          method: 'POST',
+          headers: { 'Authorization': ORS_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coordinates: [[oLng, oLat], [dLng, dLat]],
+            instructions: true,
+            language: 'pt-BR',
+            units: 'km'
+          })
+        });
+
+        if (!r.ok) return;
+        const data = await r.json();
+        const route = data.routes?.[0];
+        if (!route) return;
+
+        // Decodificar polyline
+        const coords = decodePolyline(route.geometry);
+
+        // Desenhar rota no mapa
+        if (polylineRota) mapa.removeLayer(polylineRota);
+        polylineRota = L.polyline(coords, {
+          color: '#6366f1',
+          weight: 6,
+          opacity: 0.9,
+          lineJoin: 'round',
+          lineCap: 'round'
+        }).addTo(mapa);
+
+        // Contorno da rota
+        L.polyline(coords, {
+          color: '#4338ca',
+          weight: 10,
+          opacity: 0.3,
+          lineJoin: 'round'
+        }).addTo(mapa);
+
+        // Info da rota
+        const seg = route.segments?.[0];
+        const distKm = (route.summary.distance).toFixed(1);
+        const minutos = Math.ceil(route.summary.duration / 60);
+        const horas = Math.floor(minutos / 60);
+        const mins = minutos % 60;
+        const tempoStr = horas > 0 ? `${horas}h ${mins}min` : `${mins} min`;
+
+        // Próxima instrução
+        const steps = seg?.steps || [];
+        const proxStep = steps.find(s => s.distance > 0);
+        instrucaoAtual = proxStep?.instruction || 'Siga em frente';
+
+        // Atualizar UI de navegação
+        atualizarUINavegacao(distKm, tempoStr, instrucaoAtual);
+
+      } catch(e) { console.warn('[Rota] Erro:', e.message); }
+    }, 2000); // debounce 2s
+  }
+
+  // Decodificar Google Encoded Polyline
+  function decodePolyline(encoded) {
+    const coords = [];
+    let index = 0, lat = 0, lng = 0;
+    while (index < encoded.length) {
+      let b, shift = 0, result = 0;
+      do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lat += (result & 1) ? ~(result >> 1) : result >> 1;
+      shift = 0; result = 0;
+      do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+      lng += (result & 1) ? ~(result >> 1) : result >> 1;
+      coords.push([lat / 1e5, lng / 1e5]);
+    }
+    return coords;
+  }
+
+  function atualizarUINavegacao(distKm, tempo, instrucao) {
+    const elDist  = document.getElementById('navDistancia');
+    const elTempo = document.getElementById('navTempo');
+    const elInstr = document.getElementById('navInstrucao');
+    if (elDist)  elDist.textContent  = distKm + ' km';
+    if (elTempo) elTempo.textContent = tempo;
+    if (elInstr) elInstr.textContent = instrucao;
   }
 
   // ── Rastreio GPS ───────────────────────────────────────────
@@ -835,7 +1007,12 @@
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude, longitude, accuracy, speed, heading } = pos.coords;
 
-      atualizarMapa(latitude, longitude);
+      atualizarMapa(latitude, longitude, heading);
+      
+      // Atualizar velocidade na UI
+      const velKmh = speed ? Math.round(speed * 3.6) : 0;
+      const elVel = document.getElementById('navVelocidade');
+      if (elVel) elVel.textContent = velKmh;
 
       await _sbPost('/rest/v1/rastreio',{frete_id:freteAtivo.id,motorista_id:(await _getPerfil())?.id,latitude,longitude,precisao_m:accuracy?Math.round(accuracy):null,velocidade:speed?Math.round(speed*3.6):null,rumo:heading||null});
     }, (err) => {
