@@ -627,7 +627,7 @@
   async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const {ok:ok2,error:err2} = await _patch(\`/rest/v1/fretes?id=eq.\${freteId}&status=eq.pendente\`,{status:'aceito',motorista_id:perfil.id,motorista_nome:perfil.nome,aceito_em:new Date().toISOString()});
+    const {ok:ok2,error:err2} = await _patch(`/rest/v1/fretes?id=eq.${freteId}&status=eq.pendente`,{status:'aceito',motorista_id:perfil.id,motorista_nome:perfil.nome,aceito_em:new Date().toISOString()});
     showLoading(false);
     if(!ok2){showToast('Frete já foi aceito por outro motorista','error');carregarDisponiveis();return;}
 
@@ -647,7 +647,7 @@
   async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const rows3 = await _get(\`/rest/v1/fretes?motorista_id=eq.\${perfil.id}&status=in.(aceito,em_andamento)&select=*&limit=1\`);
+    const rows3 = await _get(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=in.(aceito,em_andamento)&select=*&limit=1`);
     const data = Array.isArray(rows3) && rows3.length > 0 ? rows3[0] : null;
     if (!data) {
       freteAtivo = null;
@@ -731,7 +731,7 @@
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
     const perfIni = getCurrentProfile();
-    const {ok:okI} = await _patch(\`/rest/v1/fretes?id=eq.\${freteAtivo.id}&motorista_id=eq.\${perfIni.id}\`,{status:'em_andamento',iniciado_em:new Date().toISOString()});
+    const {ok:okI} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfIni.id}`,{status:'em_andamento',iniciado_em:new Date().toISOString()});
     showLoading(false);
     if(!okI){showToast('Erro ao iniciar frete','error');return;}
 
@@ -754,7 +754,7 @@
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
     const perfCon = getCurrentProfile();
-    const {ok:okC} = await _patch(\`/rest/v1/fretes?id=eq.\${freteAtivo.id}&motorista_id=eq.\${perfCon.id}\`,{status:'concluido',concluido_em:new Date().toISOString()});
+    const {ok:okC} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCon.id}`,{status:'concluido',concluido_em:new Date().toISOString()});
     showLoading(false);
     if(!okC){showToast('Erro ao concluir frete','error');return;}
 
@@ -781,7 +781,7 @@
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
     const perfCan = getCurrentProfile();
-    const {ok:okCan} = await _patch(\`/rest/v1/fretes?id=eq.\${freteAtivo.id}&motorista_id=eq.\${perfCan.id}\`,{status:'pendente',motorista_id:null,motorista_nome:null,aceito_em:null});
+    const {ok:okCan} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCan.id}`,{status:'pendente',motorista_id:null,motorista_nome:null,aceito_em:null});
     if(!okCan){showToast('Erro ao cancelar aceite','error');return;}
 
     freteAtivo = null;
@@ -883,7 +883,7 @@
   async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const data = await _get(\`/rest/v1/fretes?motorista_id=eq.\${perfil.id}&status=eq.concluido&order=concluido_em.desc&limit=50&select=*\`);
+    const data = await _get(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=eq.concluido&order=concluido_em.desc&limit=50&select=*`);
 
     document.getElementById('statTotal').textContent = data?.length ?? 0;
 
@@ -927,7 +927,7 @@
   async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
   async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
   async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const {ok:okP} = await _patch(\`/rest/v1/profiles?id=eq.\${perfil.id}\`,{veiculo_placa:placa,veiculo_tipo:veiculo});
+    const {ok:okP} = await _patch(`/rest/v1/profiles?id=eq.${perfil.id}`,{veiculo_placa:placa,veiculo_tipo:veiculo});
     if(!okP){showToast('Erro ao salvar','error');return;}
     showToast('Perfil salvo!', 'success');
   }
