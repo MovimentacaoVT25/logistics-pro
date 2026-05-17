@@ -585,7 +585,7 @@
     }
 
     // Preenche UI do usuário
-
+    const iniciais = (perfil.nome || 'MT').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
     document.getElementById('avatarBtn').textContent      = iniciais;
     document.getElementById('perfilAvatar').textContent   = iniciais;
     document.getElementById('perfilNome').textContent     = perfil.nome || '—';
