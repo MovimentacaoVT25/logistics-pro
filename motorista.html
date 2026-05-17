@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Motorista | Logistics Pro</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Leaflet.js — mapa gratuito, sem chave de API -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="/css/styles.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            primary: { 50:'#f0f9ff', 100:'#e0f2fe', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 900:'#0c4a6e' },
+            slate:   { 850:'#1e293b', 900:'#0f172a', 950:'#020617' }
+          },
+          boxShadow: {
+            soft: '0 2px 15px -3px rgba(0,0,0,.07), 0 10px 20px -2px rgba(0,0,0,.04)',
+            glow: '0 0 20px rgba(14,165,233,.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ── Layout base mobile-first ── */
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #f1f5f9; }
+
+    /* ── Card de frete disponível ── */
+    .frete-card {
+      background: rgba(30,41,59,0.8);
+      border: 1px solid rgba(51,65,85,0.8);
+      border-radius: 16px;
+      padding: 1.25rem;
+      transition: all 0.2s cubic-bezier(.4,0,.2,1);
+      animation: slideUp 0.3s ease forwards;
+    }
+    .frete-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .frete-card.urgente { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.05); }
+
+    /* ── Botões de ação ── */
+    .btn-aceitar {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white; font-weight: 700; font-size: 0.875rem;
+      padding: 0.75rem 1.5rem; border-radius: 12px; border: none;
+      cursor: pointer; transition: all 0.2s; width: 100%;
+      box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+    }
+    .btn-aceitar:hover   { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+    .btn-aceitar:active  { transform: translateY(0); }
+
+    .btn-iniciar {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: white; font-weight: 700; font-size: 1rem;
+      padding: 1rem; border-radius: 14px; border: none;
+      cursor: pointer; transition: all 0.2s; width: 100%;
+      box-shadow: 0 4px 15px rgba(14,165,233,0.3);
+    }
+    .btn-iniciar:hover  { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(14,165,233,0.4); }
+
+    .btn-concluir {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white; font-weight: 700; font-size: 1rem;
+      padding: 1rem; border-radius: 14px; border: none;
+      cursor: pointer; transition: all 0.2s; width: 100%;
+      box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+    }
+    .btn-concluir:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(139,92,246,0.4); }
+
+    /* ── Badge de status ── */
+    .badge-pendente   { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
+    .badge-aceito     { background:rgba(14,165,233,.15);  color:#38bdf8; border:1px solid rgba(14,165,233,.3); }
+    .badge-andamento  { background:rgba(139,92,246,.15);  color:#a78bfa; border:1px solid rgba(139,92,246,.3); }
+    .badge-concluido  { background:rgba(16,185,129,.15);  color:#34d399; border:1px solid rgba(16,185,129,.3); }
+
+    /* ── Mapa ── */
+    #mapa {
+      height: 280px; border-radius: 16px;
+      border: 1px solid rgba(51,65,85,0.8);
+      overflow: hidden;
+    }
+    .leaflet-container { background: #1e293b; }
+
+    /* ── Timer ── */
+    .timer-display {
+      font-size: 2.5rem; font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+
+    /* ── Pulse online indicator ── */
+    .pulse-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 0 rgba(16,185,129,0.4);
+      animation: pulseGreen 1.5s infinite;
+    }
+    @keyframes pulseGreen {
+      0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+      100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+    }
+
+    /* ── Navegação bottom (mobile) ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(15,23,42,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(51,65,85,0.8);
+      padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+      display: flex; justify-content: space-around; align-items: center;
+    }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 0.4rem 1rem; border-radius: 10px;
+      color: #64748b; font-size: 0.65rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; border: none; background: transparent;
+    }
+    .nav-btn.active { color: #0ea5e9; background: rgba(14,165,233,0.1); }
+    .nav-btn svg { width: 22px; height: 22px; }
+
+    /* ── Seções ── */
+    .secao { display: none; }
+    .secao.active { display: block; animation: slideUp 0.3s ease; }
+
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 3rem 1rem; gap: 1rem;
+      color: #475569; text-align: center;
+    }
+
+    /* ── Scrollbar escura ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  </style>
+</head>
+
+<body>
+  <!-- Toast -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-[9998] hidden items-center justify-center">
+    <div class="flex flex-col items-center gap-4">
+      <div class="w-12 h-12 border-4 border-primary-900 border-t-primary-500 rounded-full animate-spin"></div>
+      <p class="text-sm font-medium text-slate-400 animate-pulse">Carregando...</p>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div class="min-h-screen pb-24">
+
+    <!-- ── HEADER ── -->
+    <header class="sticky top-0 z-40" style="background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(51,65,85,0.6);">
+      <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-glow">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-bold text-white leading-none">Logistics Pro</p>
+            <p class="text-xs text-slate-500 font-medium">Portal do Motorista</p>
+          </div>
+        </div>
+
+        <!-- Status online + usuário -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <div class="pulse-dot" id="statusDot"></div>
+            <span class="text-xs text-slate-400" id="statusLabel">Online</span>
+          </div>
+          <div id="avatarBtn"
+               class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+               onclick="irParaPerfil()" title="Perfil">
+            MT
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── CONTEÚDO PRINCIPAL ── -->
+    <main class="max-w-xl mx-auto px-4 pt-5">
+
+      <!-- ════════════════════════════════════
+           SEÇÃO: DISPONÍVEIS
+           ════════════════════════════════════ -->
+      <section id="sec-disponiveis" class="secao active">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Fretes Disponíveis</h2>
+            <p class="text-xs text-slate-500">Toque em um frete para aceitar</p>
+          </div>
+          <button onclick="carregarDisponiveis()" class="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Lista de fretes -->
+        <div id="listaDisponiveis" class="space-y-3">
+          <div class="empty-state">
+            <div class="w-12 h-12 border-4 border-slate-700 border-t-primary-500 rounded-full animate-spin"></div>
+            <p class="text-slate-500 text-sm">Buscando fretes...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           SEÇÃO: MEU FRETE ATIVO
+           ════════════════════════════════════ -->
+      <section id="sec-ativo" class="secao">
+
+        <!-- Card do frete em andamento -->
+        <div id="freteAtivoCard" class="hidden">
+
+          <!-- Status + Timer -->
+          <div class="rounded-2xl p-5 mb-4" style="background:rgba(30,41,59,0.8);border:1px solid rgba(51,65,85,0.8);">
+            <div class="flex items-center justify-between mb-3">
+              <span id="badgeStatusAtivo" class="badge text-xs font-semibold px-3 py-1 rounded-full badge-aceito">Aceito</span>
+              <span id="idFreteAtivo" class="text-xs text-slate-500 font-mono">#---</span>
+            </div>
+
+            <!-- Timer de atividade -->
+            <div id="secaoTimer" class="hidden text-center py-3 mb-3">
+              <p class="text-xs text-slate-500 mb-1 uppercase tracking-widest font-semibold">Tempo em atividade</p>
+              <p class="timer-display" id="timerDisplay">00:00:00</p>
+            </div>
+
+            <!-- Detalhes do frete -->
+            <div class="space-y-3 mt-3">
+              <div class="flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 mb-0.5">Endereço</p>
+                  <p class="text-sm font-medium text-white" id="enderecoAtivo">—</p>
+                  <a id="linkMapsAtivo" href="#" target="_blank"
+                     class="text-xs text-primary-400 hover:text-primary-300 transition-colors mt-1 inline-flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Abrir no Maps
+                  </a>
+                </div>
+              </div>
+
+              <div class="flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 mb-0.5">Solicitante</p>
+                  <p class="text-sm font-medium text-white" id="solicitanteAtivo">—</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 mb-0.5">Data / Horário</p>
+                  <p class="text-sm font-medium text-white" id="dataAtivo">—</p>
+                </div>
+              </div>
+
+              <div id="obsAtivoWrapper" class="hidden flex gap-3 items-start">
+                <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 mb-0.5">Observação</p>
+                  <p class="text-sm text-slate-300" id="obsAtivo">—</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mapa de rastreio -->
+          <div id="mapaWrapper" class="hidden mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-semibold text-white flex items-center gap-2">
+                <span class="pulse-dot"></span>
+                Rastreio em tempo real
+              </p>
+              <span class="text-xs text-slate-500" id="ultimoPingLabel">—</span>
+            </div>
+            <div id="mapa"></div>
+          </div>
+
+          <!-- Botões de ação -->
+          <div class="space-y-3">
+            <!-- Iniciar (visível quando aceito) -->
+            <button id="btnIniciar" class="btn-iniciar hidden" onclick="iniciarFrete()">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Iniciar Frete
+              </span>
+            </button>
+
+            <!-- Concluir (visível quando em_andamento) -->
+            <button id="btnConcluir" class="btn-concluir hidden" onclick="concluirFrete()">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Concluir Frete
+              </span>
+            </button>
+
+            <!-- Cancelar aceite (apenas se ainda não iniciou) -->
+            <button id="btnCancelarAceite" class="hidden w-full py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all border border-slate-700 hover:border-red-400/30" onclick="cancelarAceite()">
+              Cancelar aceite
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty: sem frete ativo -->
+        <div id="semFreteAtivo" class="empty-state">
+          <svg class="w-16 h-16 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <p class="font-semibold text-slate-400">Nenhum frete ativo</p>
+          <p class="text-sm text-slate-600">Aceite um frete na aba "Disponíveis"</p>
+          <button onclick="mudarSecao('disponiveis')" class="mt-2 px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-500 transition-all">
+            Ver disponíveis
+          </button>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           SEÇÃO: HISTÓRICO
+           ════════════════════════════════════ -->
+      <section id="sec-historico" class="secao">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Histórico</h2>
+            <p class="text-xs text-slate-500">Seus fretes concluídos</p>
+          </div>
+          <!-- Stats resumo -->
+          <div id="statsResumo" class="text-right">
+            <p class="text-lg font-bold text-primary-400" id="statTotal">0</p>
+            <p class="text-xs text-slate-500">concluídos</p>
+          </div>
+        </div>
+        <div id="listaHistorico" class="space-y-3"></div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           SEÇÃO: PERFIL
+           ════════════════════════════════════ -->
+      <section id="sec-perfil" class="secao">
+        <div class="rounded-2xl p-5 mb-4" style="background:rgba(30,41,59,0.8);border:1px solid rgba(51,65,85,0.8);">
+          <!-- Avatar + nome -->
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center text-white text-2xl font-bold" id="perfilAvatar">MT</div>
+            <div>
+              <h3 class="text-lg font-bold text-white" id="perfilNome">Motorista</h3>
+              <p class="text-sm text-slate-400" id="perfilEmail">—</p>
+              <span class="inline-flex items-center gap-1.5 mt-1 text-xs text-violet-400 font-semibold">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 18a8 8 0 1116 0H2z"/></svg>
+                Motorista
+              </span>
+            </div>
+          </div>
+
+          <!-- Veículo -->
+          <div class="border-t border-slate-700 pt-4 space-y-3">
+            <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold">Meu Veículo</p>
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label class="text-xs text-slate-500 mb-1 block">Placa</label>
+                <input type="text" id="inputPlaca" placeholder="ABC-1234" maxlength="8"
+                       class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition-all uppercase"
+                       oninput="this.value=this.value.toUpperCase()">
+              </div>
+              <div class="flex-1">
+                <label class="text-xs text-slate-500 mb-1 block">Tipo</label>
+                <select id="selectVeiculo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary-500 transition-all">
+                  <option value="caminhao">Caminhão</option>
+                  <option value="carro">Carro</option>
+                  <option value="moto">Moto</option>
+                </select>
+              </div>
+            </div>
+            <button onclick="salvarPerfil()" class="w-full py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-all">
+              Salvar
+            </button>
+          </div>
+
+          <!-- Disponibilidade -->
+          <div class="border-t border-slate-700 pt-4 mt-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-semibold text-white">Disponível para fretes</p>
+                <p class="text-xs text-slate-500">Aparecer na lista de motoristas</p>
+              </div>
+              <button id="toggleDisponivel" onclick="toggleDisponibilidade()"
+                      class="w-12 h-6 rounded-full transition-all relative bg-green-500">
+                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-all translate-x-6"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logout -->
+        <button onclick="logout()" class="w-full py-3 rounded-xl border border-red-400/30 text-red-400 hover:bg-red-400/10 text-sm font-semibold transition-all">
+          Sair da conta
+        </button>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── NAVEGAÇÃO INFERIOR ── -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-disponiveis" onclick="mudarSecao('disponiveis')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+      </svg>
+      Disponíveis
+    </button>
+    <button class="nav-btn" id="nav-ativo" onclick="mudarSecao('ativo')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      Em Curso
+      <span id="badgeAtivo" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-primary-500 rounded-full text-white text-xs flex items-center justify-center">1</span>
+    </button>
+    <button class="nav-btn" id="nav-historico" onclick="mudarSecao('historico')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Histórico
+    </button>
+    <button class="nav-btn" id="nav-perfil" onclick="mudarSecao('perfil')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+      </svg>
+      Perfil
+    </button>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="/js/auth.js"></script>
+  <script src="/js/permissions.js"></script>
+
+  <script>
+  // ============================================================
+  // MOTORISTA.JS — lógica do portal do motorista
+  // ============================================================
+
+  // ── Estado global ──────────────────────────────────────────
+  let freteAtivo       = null;   // frete aceito/em andamento
+  let mapa             = null;   // instância Leaflet
+  let marcadorMotorista = null;  // marcador no mapa
+  let rastreioInterval = null;   // setInterval do ping GPS
+  let timerInterval    = null;   // setInterval do cronômetro
+  let timerInicio      = null;   // Date do início
+  let realtimeChannel  = null;   // canal Supabase Realtime
+  let disponivel       = true;
+
+  // ── Inicialização ──────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Protege a rota: só motoristas (nivel=4)
+    await requireNivel(4);
+
+    const perfil = getCurrentProfile();
+    if (!perfil) return;
+
+    // Preenche UI do usuário
+    const iniciais = (perfil.nome || 'MT').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('avatarBtn').textContent      = iniciais;
+    document.getElementById('perfilAvatar').textContent   = iniciais;
+    document.getElementById('perfilNome').textContent     = perfil.nome || '—';
+    document.getElementById('perfilEmail').textContent    = perfil.email || '—';
+    document.getElementById('inputPlaca').value           = perfil.veiculo_placa  || '';
+    document.getElementById('selectVeiculo').value        = perfil.veiculo_tipo   || 'caminhao';
+    disponivel = perfil.disponivel ?? true;
+    atualizarToggleDisponivel();
+
+    await carregarFreteAtivo();
+    await carregarDisponiveis();
+    inscreverRealtime();
+  });
+
+  // ── Navegação entre seções ─────────────────────────────────
+  function mudarSecao(id) {
+    document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sec-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+
+    if (id === 'historico') carregarHistorico();
+  }
+
+  function irParaPerfil() { mudarSecao('perfil'); }
+
+  // ── Fretes disponíveis ─────────────────────────────────────
+  async function carregarDisponiveis() {
+    const lista = document.getElementById('listaDisponiveis');
+    lista.innerHTML = `
+      <div class="empty-state">
+        <div class="w-10 h-10 border-4 border-slate-700 border-t-primary-500 rounded-full animate-spin"></div>
+        <p class="text-slate-500 text-sm">Buscando fretes...</p>
+      </div>`;
+
+    const { data, error } = await supabase.rpc('get_fretes_disponiveis');
+    if (error) { showToast('Erro ao buscar fretes', 'error'); return; }
+
+    if (!data || data.length === 0) {
+      lista.innerHTML = `
+        <div class="empty-state">
+          <svg class="w-14 h-14 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+          <p class="font-semibold text-slate-400">Nenhum frete disponível</p>
+          <p class="text-sm text-slate-600">Novos fretes aparecem aqui automaticamente</p>
+        </div>`;
+      return;
+    }
+
+    lista.innerHTML = data.map(f => renderCardDisponivel(f)).join('');
+  }
+
+  function renderCardDisponivel(f) {
+    const urgente  = f.urgente ? '<span class="text-xs font-bold text-red-400 flex items-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>URGENTE</span>' : '';
+    const tipo     = f.tipo === 'coleta' ? '📦 Coleta' : '🚚 Envio';
+    const data     = f.data_coleta ? new Date(f.data_coleta + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const horario  = f.horario_janela ? f.horario_janela.slice(0,5) : '—';
+    const empresa  = f.empresa || '';
+
+    return `
+      <div class="frete-card ${f.urgente ? 'urgente' : ''}">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-white">${tipo}</span>
+            ${urgente}
+          </div>
+          <span class="text-xs text-slate-500 font-mono">#${f.id.slice(-6).toUpperCase()}</span>
+        </div>
+
+        <div class="space-y-2 mb-4">
+          <div class="flex items-center gap-2 text-sm text-slate-300">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            </svg>
+            <span class="truncate">${f.endereco || 'Endereço não informado'}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-slate-400">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            ${data} às ${horario}${empresa ? ' · ' + empresa : ''}
+          </div>
+          <div class="flex items-center gap-2 text-sm text-slate-400">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            ${f.solicitante_nome || 'Solicitante'}
+          </div>
+        </div>
+
+        <button class="btn-aceitar" onclick="aceitarFrete('${f.id}')">
+          Aceitar frete
+        </button>
+      </div>`;
+  }
+
+  // ── Aceitar frete ──────────────────────────────────────────
+  async function aceitarFrete(freteId) {
+    showLoading(true);
+    const perfil = getCurrentProfile();
+
+    const { error } = await supabase
+      .from('fretes')
+      .update({
+        status:         'aceito',
+        motorista_id:   perfil.id,
+        motorista_nome: perfil.nome,
+        aceito_em:      new Date().toISOString()
+      })
+      .eq('id', freteId)
+      .eq('status', 'pendente'); // garante que não foi aceito por outro motorista
+
+    showLoading(false);
+
+    if (error) {
+      showToast('Frete já foi aceito por outro motorista', 'error');
+      carregarDisponiveis();
+      return;
+    }
+
+    showToast('Frete aceito! Boa viagem! 🚚', 'success');
+    await carregarFreteAtivo();
+    mudarSecao('ativo');
+  }
+
+  // ── Frete ativo ────────────────────────────────────────────
+  async function carregarFreteAtivo() {
+    const perfil = getCurrentProfile();
+    const { data, error } = await supabase
+      .from('fretes')
+      .select('*')
+      .eq('motorista_id', perfil.id)
+      .in('status', ['aceito', 'em_andamento'])
+      .maybeSingle();
+
+    if (error || !data) {
+      freteAtivo = null;
+      exibirSemFreteAtivo();
+      document.getElementById('badgeAtivo').classList.add('hidden');
+      return;
+    }
+
+    freteAtivo = data;
+    document.getElementById('badgeAtivo').classList.remove('hidden');
+    renderFreteAtivo(data);
+  }
+
+  function renderFreteAtivo(f) {
+    document.getElementById('freteAtivoCard').classList.remove('hidden');
+    document.getElementById('semFreteAtivo').classList.add('hidden');
+
+    document.getElementById('idFreteAtivo').textContent       = '#' + f.id.slice(-6).toUpperCase();
+    document.getElementById('enderecoAtivo').textContent      = f.endereco || '—';
+    document.getElementById('solicitanteAtivo').textContent   = f.solicitante_nome || '—';
+    document.getElementById('obsAtivo').textContent           = f.observacao || '';
+
+    const data    = f.data_coleta ? new Date(f.data_coleta + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const horario = f.horario_janela ? f.horario_janela.slice(0,5) : '';
+    document.getElementById('dataAtivo').textContent = data + (horario ? ' às ' + horario : '');
+
+    if (f.observacao) {
+      document.getElementById('obsAtivoWrapper').classList.remove('hidden');
+      document.getElementById('obsAtivoWrapper').classList.add('flex');
+    }
+
+    if (f.link_maps) {
+      document.getElementById('linkMapsAtivo').href = f.link_maps;
+      document.getElementById('linkMapsAtivo').style.display = 'inline-flex';
+    } else {
+      document.getElementById('linkMapsAtivo').style.display = 'none';
+    }
+
+    // Badge de status
+    const badgeEl = document.getElementById('badgeStatusAtivo');
+    if (f.status === 'aceito') {
+      badgeEl.textContent  = '✓ Aceito';
+      badgeEl.className    = 'badge text-xs font-semibold px-3 py-1 rounded-full badge-aceito';
+      document.getElementById('btnIniciar').classList.remove('hidden');
+      document.getElementById('btnConcluir').classList.add('hidden');
+      document.getElementById('btnCancelarAceite').classList.remove('hidden');
+      document.getElementById('secaoTimer').classList.add('hidden');
+      document.getElementById('mapaWrapper').classList.add('hidden');
+    } else if (f.status === 'em_andamento') {
+      badgeEl.textContent  = '▶ Em andamento';
+      badgeEl.className    = 'badge text-xs font-semibold px-3 py-1 rounded-full badge-andamento';
+      document.getElementById('btnIniciar').classList.add('hidden');
+      document.getElementById('btnConcluir').classList.remove('hidden');
+      document.getElementById('btnCancelarAceite').classList.add('hidden');
+      document.getElementById('secaoTimer').classList.remove('hidden');
+      document.getElementById('mapaWrapper').classList.remove('hidden');
+      iniciarTimer(f.iniciado_em ? new Date(f.iniciado_em) : new Date());
+      iniciarMapa();
+      iniciarRastreio();
+    }
+  }
+
+  function exibirSemFreteAtivo() {
+    document.getElementById('freteAtivoCard').classList.add('hidden');
+    document.getElementById('semFreteAtivo').classList.remove('hidden');
+    pararTimer();
+    pararRastreio();
+  }
+
+  // ── Iniciar frete ──────────────────────────────────────────
+  async function iniciarFrete() {
+    if (!freteAtivo) return;
+    showLoading(true);
+
+    const { error } = await supabase
+      .from('fretes')
+      .update({ status: 'em_andamento', iniciado_em: new Date().toISOString() })
+      .eq('id', freteAtivo.id)
+      .eq('motorista_id', getCurrentProfile().id);
+
+    showLoading(false);
+    if (error) { showToast('Erro ao iniciar frete', 'error'); return; }
+
+    showToast('Frete iniciado! Rastreio ativo 📍', 'success');
+    await carregarFreteAtivo();
+  }
+
+  // ── Concluir frete ─────────────────────────────────────────
+  async function concluirFrete() {
+    if (!freteAtivo) return;
+    if (!confirm('Confirmar conclusão do frete?')) return;
+    showLoading(true);
+
+    const { error } = await supabase
+      .from('fretes')
+      .update({ status: 'concluido', concluido_em: new Date().toISOString() })
+      .eq('id', freteAtivo.id)
+      .eq('motorista_id', getCurrentProfile().id);
+
+    showLoading(false);
+    if (error) { showToast('Erro ao concluir frete', 'error'); return; }
+
+    pararTimer();
+    pararRastreio();
+    freteAtivo = null;
+    showToast('Frete concluído! 🎉', 'success');
+    exibirSemFreteAtivo();
+    document.getElementById('badgeAtivo').classList.add('hidden');
+    await carregarDisponiveis();
+  }
+
+  // ── Cancelar aceite ────────────────────────────────────────
+  async function cancelarAceite() {
+    if (!freteAtivo) return;
+    if (!confirm('Cancelar o aceite deste frete?')) return;
+
+    const { error } = await supabase
+      .from('fretes')
+      .update({ status: 'pendente', motorista_id: null, motorista_nome: null, aceito_em: null })
+      .eq('id', freteAtivo.id)
+      .eq('motorista_id', getCurrentProfile().id);
+
+    if (error) { showToast('Erro ao cancelar aceite', 'error'); return; }
+
+    freteAtivo = null;
+    exibirSemFreteAtivo();
+    document.getElementById('badgeAtivo').classList.add('hidden');
+    showToast('Aceite cancelado. O frete voltou para disponíveis.', 'info');
+    await carregarDisponiveis();
+    mudarSecao('disponiveis');
+  }
+
+  // ── Timer ──────────────────────────────────────────────────
+  function iniciarTimer(desde) {
+    pararTimer();
+    timerInicio = desde;
+    timerInterval = setInterval(() => {
+      const diff   = Math.floor((Date.now() - timerInicio.getTime()) / 1000);
+      const h      = String(Math.floor(diff / 3600)).padStart(2, '0');
+      const m      = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+      const s      = String(diff % 60).padStart(2, '0');
+      const el     = document.getElementById('timerDisplay');
+      if (el) el.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+
+  function pararTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  // ── Mapa Leaflet ───────────────────────────────────────────
+  function iniciarMapa() {
+    if (mapa) return; // já iniciado
+    mapa = L.map('mapa', { zoomControl: true, attributionControl: false }).setView([-23.5, -48.0], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(mapa);
+  }
+
+  function atualizarMapa(lat, lng) {
+    if (!mapa) return;
+    const pos = [lat, lng];
+    if (!marcadorMotorista) {
+      const icone = L.divIcon({
+        html: `<div style="width:16px;height:16px;border-radius:50%;background:#0ea5e9;border:3px solid white;box-shadow:0 0 0 3px rgba(14,165,233,0.4);"></div>`,
+        iconSize: [16, 16], iconAnchor: [8, 8], className: ''
+      });
+      marcadorMotorista = L.marker(pos, { icon: icone }).addTo(mapa);
+    } else {
+      marcadorMotorista.setLatLng(pos);
+    }
+    mapa.panTo(pos, { animate: true, duration: 0.5 });
+
+    const label = document.getElementById('ultimoPingLabel');
+    if (label) label.textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  // ── Rastreio GPS ───────────────────────────────────────────
+  function iniciarRastreio() {
+    if (rastreioInterval) return;
+    enviarPing(); // ping imediato
+    rastreioInterval = setInterval(enviarPing, 10000); // a cada 10s
+  }
+
+  function pararRastreio() {
+    if (rastreioInterval) { clearInterval(rastreioInterval); rastreioInterval = null; }
+  }
+
+  async function enviarPing() {
+    if (!freteAtivo || !navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude, accuracy, speed, heading } = pos.coords;
+
+      atualizarMapa(latitude, longitude);
+
+      await supabase.from('rastreio').insert({
+        frete_id:     freteAtivo.id,
+        motorista_id: getCurrentProfile().id,
+        latitude,
+        longitude,
+        precisao_m:   accuracy ? Math.round(accuracy) : null,
+        velocidade:   speed    ? Math.round(speed * 3.6) : null, // m/s → km/h
+        rumo:         heading  || null
+      });
+    }, (err) => {
+      console.warn('[Rastreio] GPS indisponível:', err.message);
+      document.getElementById('statusDot').style.background = '#f59e0b';
+      document.getElementById('statusLabel').textContent    = 'GPS off';
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  }
+
+  // ── Histórico ──────────────────────────────────────────────
+  async function carregarHistorico() {
+    const perfil = getCurrentProfile();
+    const { data } = await supabase
+      .from('fretes')
+      .select('*')
+      .eq('motorista_id', perfil.id)
+      .eq('status', 'concluido')
+      .order('concluido_em', { ascending: false })
+      .limit(50);
+
+    document.getElementById('statTotal').textContent = data?.length ?? 0;
+
+    const lista = document.getElementById('listaHistorico');
+    if (!data || data.length === 0) {
+      lista.innerHTML = `<div class="empty-state"><p class="text-slate-500">Nenhum frete concluído ainda</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = data.map(f => {
+      const data_c    = f.concluido_em ? new Date(f.concluido_em).toLocaleDateString('pt-BR') : '—';
+      const hora_c    = f.concluido_em ? new Date(f.concluido_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
+      const tipo      = f.tipo === 'coleta' ? '📦' : '🚚';
+      return `
+        <div class="frete-card">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-sm font-semibold text-white">${tipo} ${f.tipo === 'coleta' ? 'Coleta' : 'Envio'} · <span class="text-slate-400 font-normal">${f.solicitante_nome || '—'}</span></p>
+              <p class="text-xs text-slate-500 mt-1">${f.endereco || '—'}</p>
+            </div>
+            <div class="text-right flex-shrink-0 ml-3">
+              <span class="badge badge-concluido text-xs px-2 py-0.5 rounded-full">Concluído</span>
+              <p class="text-xs text-slate-600 mt-1">${data_c} ${hora_c}</p>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Perfil ─────────────────────────────────────────────────
+  async function salvarPerfil() {
+    const placa   = document.getElementById('inputPlaca').value.trim();
+    const veiculo = document.getElementById('selectVeiculo').value;
+    const perfil  = getCurrentProfile();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ veiculo_placa: placa, veiculo_tipo: veiculo })
+      .eq('id', perfil.id);
+
+    if (error) { showToast('Erro ao salvar', 'error'); return; }
+    showToast('Perfil salvo!', 'success');
+  }
+
+  async function toggleDisponibilidade() {
+    disponivel = !disponivel;
+    const perfil = getCurrentProfile();
+    await supabase.from('profiles').update({ disponivel }).eq('id', perfil.id);
+    atualizarToggleDisponivel();
+    showToast(disponivel ? 'Você está disponível' : 'Você está indisponível', disponivel ? 'success' : 'warning');
+  }
+
+  function atualizarToggleDisponivel() {
+    const btn  = document.getElementById('toggleDisponivel');
+    const span = btn.querySelector('span');
+    if (disponivel) {
+      btn.style.background   = '#10b981';
+      span.style.transform   = 'translateX(24px)';
+    } else {
+      btn.style.background   = '#334155';
+      span.style.transform   = 'translateX(2px)';
+    }
+  }
+
+  // ── Supabase Realtime ──────────────────────────────────────
+  function inscreverRealtime() {
+    realtimeChannel = supabase
+      .channel('motorista-fretes')
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'fretes',
+        filter: `status=eq.pendente`
+      }, () => {
+        // Novo frete pendente → atualiza lista
+        const sec = document.getElementById('sec-disponiveis');
+        if (sec.classList.contains('active')) carregarDisponiveis();
+        else showToast('Novo frete disponível! 🚚', 'info');
+      })
+      .subscribe();
+  }
+
+  // ── Toast (reexportado para este contexto) ─────────────────
+  window.showLoading = (v) => {
+    const el = document.getElementById('loadingOverlay');
+    if (!el) return;
+    el.classList.toggle('hidden', !v);
+    el.classList.toggle('flex', v);
+  };
+  </script>
+</body>
+</html>
