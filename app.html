@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>window.supabaseLib = window.supabase;</script>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -579,9 +580,13 @@
 const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
-// Reutiliza o cliente singleton do auth.js se disponível
+// Inicializa cliente Supabase — compatível com ou sem auth.js carregado
 if (!window._supabaseClient) {
-  const { createClient } = window.supabase;
+  // window.supabase pode ser o CDN (tem createClient) ou o client (não tem)
+  const lib = (typeof window.supabase?.createClient === 'function')
+    ? window.supabase
+    : window.supabaseLib;
+  const { createClient } = lib || window.supabase;
   window._supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
@@ -1003,11 +1008,15 @@ if (formNovoEnvio) {
   formNovoEnvio.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Validar autenticação
+    // Validar autenticação — re-buscar sessão se necessário
     if (!currentUser) {
-      alert('Você precisa estar logado para criar solicitações');
-      window.location.href = '/login.html';
-      return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        alert('Você precisa estar logado para criar solicitações');
+        window.location.href = '/login.html';
+        return;
+      }
+      currentUser = session.user;
     }
     
     // Coletar dados do formulário
