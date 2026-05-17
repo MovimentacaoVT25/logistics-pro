@@ -893,23 +893,21 @@
     const label = document.getElementById('ultimoPingLabel');
     if (label) label.textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
-    // Calcular rota se tem destino
+    // Calcular rota se tem destino (a cada 30s ou na primeira vez)
     if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
-      calcularRota(lat, lng, freteAtivo.destino_lat, freteAtivo.destino_lng);
+      const agora = Date.now();
+      if (agora - _ultimaRotaCalc > 30000) {
+        _ultimaRotaCalc = agora;
+        calcularRota(lat, lng, freteAtivo.destino_lat, freteAtivo.destino_lng);
+      }
     }
   }
 
   // ── Rota via OSRM (gratuito, sem CORS) ────────────────────
-  let _rotaTimeout = null;
   let _ultimaRotaCalc = 0;
 
   async function calcularRota(oLat, oLng, dLat, dLng) {
-    clearTimeout(_rotaTimeout);
-    _rotaTimeout = setTimeout(async () => {
-      // Limitar: recalcular no máximo a cada 30s
-      if (Date.now() - _ultimaRotaCalc < 30000) return;
-      _ultimaRotaCalc = Date.now();
-      try {
+    try {
         // OSRM — gratuito, sem chave, sem restrição CORS
         const url = `https://router.project-osrm.org/route/v1/driving/${oLng},${oLat};${dLng},${dLat}?overview=full&geometries=geojson&steps=true&language=pt`;
         const r = await fetch(url);
@@ -953,17 +951,15 @@
 
         atualizarUINavegacao(distKm, tempoStr, instrucaoAtual);
 
-      } catch(e) {
-        console.warn('[Rota] Erro OSRM:', e.message);
-        // Fallback: linha reta ao destino
-        if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
-          const coords = [[oLat, oLng], [freteAtivo.destino_lat, freteAtivo.destino_lng]];
-          if (polylineRota) polylineRota.forEach(l => mapa.removeLayer(l));
-          polylineRota = [L.polyline(coords, { color: '#6366f1', weight: 4, dashArray: '8,8' }).addTo(mapa)];
-          atualizarUINavegacao('—', '—', '↑ Siga em direção ao destino');
-        }
+    } catch(e) {
+      console.warn('[Rota] Erro OSRM:', e.message);
+      if (freteAtivo?.destino_lat && freteAtivo?.destino_lng) {
+        const coords = [[oLat, oLng], [freteAtivo.destino_lat, freteAtivo.destino_lng]];
+        if (polylineRota) polylineRota.forEach(l => mapa.removeLayer(l));
+        polylineRota = [L.polyline(coords, { color: '#6366f1', weight: 4, dashArray: '8,8' }).addTo(mapa)];
+        atualizarUINavegacao('—', '—', '↑ Siga em direção ao destino');
       }
-    }, 1500);
+    }
   }
 
   // Decodificar Google Encoded Polyline
