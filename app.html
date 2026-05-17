@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script>window.supabaseLib = window.supabase;</script>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -580,18 +579,12 @@
 const SUPABASE_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
-// Inicializa cliente Supabase — compatível com ou sem auth.js carregado
-if (!window._supabaseClient) {
-  // window.supabase pode ser o CDN (tem createClient) ou o client (não tem)
-  const lib = (typeof window.supabase?.createClient === 'function')
-    ? window.supabase
-    : window.supabaseLib;
-  const { createClient } = lib || window.supabase;
-  window._supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
-}
-const supabaseClient = window._supabaseClient;
+// Inicializa cliente Supabase diretamente do CDN
+// auth.js usa _client internamente e não sobrescreve window.supabase
+const { createClient } = window.supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
 
 let currentUser = null;
 let userProfile = null;
