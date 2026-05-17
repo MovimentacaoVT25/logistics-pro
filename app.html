@@ -8,6 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -509,25 +511,75 @@
                             <div class="space-y-6">
                                 <div class="flex items-center gap-3 mb-4">
                                     <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm">3</div>
-                                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Localização</h3>
+                                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Localização do Destino</h3>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Endereço (Link do Google Maps)</label>
+                                <!-- Tabs: Busca ou Link -->
+                                <div class="flex gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-xl w-fit">
+                                    <button type="button" id="tabBusca" onclick="alternarModoEndereco('busca')"
+                                        class="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all">
+                                        🔍 Buscar endereço
+                                    </button>
+                                    <button type="button" id="tabLink" onclick="alternarModoEndereco('link')"
+                                        class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all">
+                                        🔗 Link Google Maps
+                                    </button>
+                                </div>
+
+                                <!-- Modo busca -->
+                                <div id="modoBusca" class="space-y-3">
                                     <div class="relative">
-                                        <input type="text" name="endereco" required placeholder="https://maps.google.com/..." 
-                                            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all-300 input-animated">
+                                        <input type="text" id="inputBuscaEndereco" placeholder="Digite o endereço de entrega..."
+                                            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all-300"
+                                            autocomplete="off">
                                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                        <!-- Sugestões -->
+                                        <div id="sugestoesEndereco" class="hidden absolute z-50 w-full top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden"></div>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Digite e selecione o endereço nas sugestões para confirmar no mapa</p>
+                                </div>
+
+                                <!-- Modo link -->
+                                <div id="modoLink" class="hidden space-y-3">
+                                    <div class="relative">
+                                        <input type="text" id="inputLinkMaps" placeholder="https://maps.google.com/..."
+                                            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all-300"
+                                            oninput="processarLinkMaps(this.value)">
+                                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                         </svg>
                                     </div>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">Cole o link completo do Google Maps para visualização automática no mapa</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Cole o link do Google Maps — o sistema extrai as coordenadas automaticamente</p>
+                                </div>
+
+                                <!-- Mini mapa de confirmação -->
+                                <div id="miniMapaWrapper" class="hidden space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Destino confirmado</p>
+                                        </div>
+                                        <button type="button" onclick="limparDestino()" class="text-xs text-slate-400 hover:text-red-400 transition-colors">✕ Limpar</button>
+                                    </div>
+                                    <p id="enderecoConfirmado" class="text-sm text-primary-600 dark:text-primary-400 font-medium"></p>
+                                    <div id="miniMapa" style="height:220px;border-radius:12px;overflow:hidden;border:2px solid #0ea5e9;"></div>
+                                    <!-- Campos hidden com coordenadas -->
+                                    <input type="hidden" name="endereco" id="hiddenEndereco">
+                                    <input type="hidden" name="destino_lat" id="hiddenLat">
+                                    <input type="hidden" name="destino_lng" id="hiddenLng">
+                                    <input type="hidden" name="destino_endereco" id="hiddenDestEndereco">
+                                </div>
+
+                                <!-- Aviso se não confirmou -->
+                                <div id="avisoDestino" class="hidden p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                                    <p class="text-sm text-amber-700 dark:text-amber-400">⚠️ Confirme o endereço no mapa antes de criar a solicitação</p>
                                 </div>
 
                                 <div class="space-y-2">
                                     <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
-                                    <textarea name="observacao" rows="3" placeholder="Informações adicionais sobre a entrega..." 
+                                    <textarea name="observacao" rows="3" placeholder="Informações adicionais sobre a entrega..."
                                         class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all-300 resize-none"></textarea>
                                 </div>
                             </div>
@@ -1032,9 +1084,16 @@ if (formNovoEnvio) {
     const endereco = formData.get('endereco')?.trim();
     const observacao = formData.get('observacao')?.trim() || '';
     
+    // Validar destino confirmado no mapa
+    if (!_destinoConfirmado || !formData.get('destino_lat')) {
+      document.getElementById('avisoDestino').classList.remove('hidden');
+      document.getElementById('miniMapaWrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     // Validação manual (caso o HTML5 não pegue)
     if (!solicitante || !email || !numero_contato || !empresa || !tipo || 
-        !tipo_veiculo || !urgencia || !data_coleta || !horario_janela || !endereco) {
+        !tipo_veiculo || !urgencia || !data_coleta || !horario_janela) {
       alert('⚠️ Por favor, preencha todos os campos obrigatórios!');
       return;
     }
@@ -1053,6 +1112,9 @@ if (formNovoEnvio) {
       horario_janela,
       endereco,
       link_maps:      endereco?.startsWith('http') ? endereco : null,
+      destino_lat:    formData.get('destino_lat') ? parseFloat(formData.get('destino_lat')) : null,
+      destino_lng:    formData.get('destino_lng') ? parseFloat(formData.get('destino_lng')) : null,
+      destino_endereco: formData.get('destino_endereco') || endereco,
       observacao,
       status:         'pendente',
       solicitante_id: currentUser.id,
@@ -1121,6 +1183,121 @@ if (formNovoEnvio) {
       btnText.textContent = originalText;
     }
   });
+}
+
+// ==================== MAPA DE DESTINO ====================
+let _miniMapa = null;
+let _marcadorDestino = null;
+let _buscaTimeout = null;
+let _destinoConfirmado = false;
+
+function alternarModoEndereco(modo) {
+  const isBusca = modo === 'busca';
+  document.getElementById('modoBusca').classList.toggle('hidden', !isBusca);
+  document.getElementById('modoLink').classList.toggle('hidden', isBusca);
+  document.getElementById('tabBusca').className = isBusca
+    ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all'
+    : 'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
+  document.getElementById('tabLink').className = !isBusca
+    ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-slate-800 text-primary-600 shadow-sm transition-all'
+    : 'px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 transition-all';
+  limparDestino();
+}
+
+// Busca de endereço com Nominatim (OpenStreetMap) — gratuito
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('inputBuscaEndereco');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    clearTimeout(_buscaTimeout);
+    const q = input.value.trim();
+    if (q.length < 3) { document.getElementById('sugestoesEndereco').classList.add('hidden'); return; }
+    _buscaTimeout = setTimeout(() => buscarSugestoes(q), 400);
+  });
+  input.addEventListener('blur', () => {
+    setTimeout(() => document.getElementById('sugestoesEndereco').classList.add('hidden'), 200);
+  });
+});
+
+async function buscarSugestoes(query) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&addressdetails=1`;
+    const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+    const data = await r.json();
+    const box = document.getElementById('sugestoesEndereco');
+    if (!data.length) { box.classList.add('hidden'); return; }
+    box.innerHTML = data.map(d => `
+      <button type="button" onclick="confirmarDestino(${d.lat}, ${d.lon}, '${d.display_name.replace(/'/g, "\'")}')"
+        class="w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors">
+        <div class="font-medium text-slate-900 dark:text-white truncate">${d.display_name.split(',').slice(0,3).join(',')}</div>
+        <div class="text-xs text-slate-500 truncate">${d.display_name}</div>
+      </button>`).join('');
+    box.classList.remove('hidden');
+  } catch(e) { console.warn('Erro na busca:', e); }
+}
+
+function confirmarDestino(lat, lng, endereco) {
+  document.getElementById('sugestoesEndereco').classList.add('hidden');
+  _setDestino(parseFloat(lat), parseFloat(lng), endereco);
+}
+
+// Extrai coordenadas de link do Google Maps
+function processarLinkMaps(link) {
+  if (!link || link.length < 10) return;
+  // Formatos: @lat,lng | ?q=lat,lng | /place/.../@lat,lng
+  const patterns = [
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /\/(-?\d+\.\d+),(-?\d+\.\d+)/,
+  ];
+  for (const p of patterns) {
+    const m = link.match(p);
+    if (m) { _setDestino(parseFloat(m[1]), parseFloat(m[2]), link); return; }
+  }
+}
+
+function _setDestino(lat, lng, endereco) {
+  _destinoConfirmado = true;
+  // Preencher campos hidden
+  document.getElementById('hiddenEndereco').value = endereco;
+  document.getElementById('hiddenLat').value = lat;
+  document.getElementById('hiddenLng').value = lng;
+  document.getElementById('hiddenDestEndereco').value = endereco;
+  document.getElementById('enderecoConfirmado').textContent = endereco.length > 80 ? endereco.substring(0,80)+'...' : endereco;
+  document.getElementById('miniMapaWrapper').classList.remove('hidden');
+  document.getElementById('avisoDestino').classList.add('hidden');
+
+  // Inicializar ou atualizar mapa
+  if (!_miniMapa) {
+    _miniMapa = L.map('miniMapa', { zoomControl: true, attributionControl: false }).setView([lat, lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_miniMapa);
+  } else {
+    _miniMapa.setView([lat, lng], 16);
+  }
+
+  // Marcador de destino
+  const icone = L.divIcon({
+    html: `<div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [20,20], iconAnchor: [10,10], className: ''
+  });
+  if (_marcadorDestino) _marcadorDestino.setLatLng([lat, lng]);
+  else _marcadorDestino = L.marker([lat, lng], { icon: icone }).addTo(_miniMapa);
+
+  // Forçar resize do mapa
+  setTimeout(() => _miniMapa.invalidateSize(), 100);
+}
+
+function limparDestino() {
+  _destinoConfirmado = false;
+  document.getElementById('miniMapaWrapper').classList.add('hidden');
+  document.getElementById('hiddenEndereco').value = '';
+  document.getElementById('hiddenLat').value = '';
+  document.getElementById('hiddenLng').value = '';
+  document.getElementById('hiddenDestEndereco').value = '';
+  document.getElementById('inputBuscaEndereco').value = '';
+  if (document.getElementById('inputLinkMaps')) document.getElementById('inputLinkMaps').value = '';
+  if (_marcadorDestino && _miniMapa) { _miniMapa.removeLayer(_marcadorDestino); _marcadorDestino = null; }
 }
 
 // ==================== INICIALIZAÇÃO ====================
