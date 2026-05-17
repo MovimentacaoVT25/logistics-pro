@@ -727,6 +727,7 @@ async function loadUserProfile(token) {
     document.getElementById('userName').textContent = name;
     document.getElementById('userEmail').textContent = getNivelLabel(userProfile.nivel || 1);
     document.getElementById('userAvatar').textContent = name.substring(0, 2).toUpperCase();
+    _aplicarNavPorNivel();
   } catch (error) {
     console.error('Erro ao carregar perfil do usuário:', error);
   }
@@ -1440,6 +1441,8 @@ function _pararAtualizacaoAcomp(){ if(_acInterval){clearInterval(_acInterval);_a
   const isAuth = await checkAuth();
   if (isAuth) {
     await carregarDados();
+    // Garantir que a nav está correta após tudo carregar
+    setTimeout(_aplicarNavPorNivel, 500);
   }
 })();
     </script>
