@@ -19,7 +19,8 @@
 const SUPABASE_URL      = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
 
-// Inicializa o cliente — guarda no window para evitar re-declaração entre páginas
+// Inicializa o cliente Supabase — usa nome interno _client para não conflitar
+// com window.supabase (CDN) que outros arquivos usam diretamente
 if (!window._supabaseClient) {
   const { createClient } = window.supabase;
   window._supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -30,7 +31,8 @@ if (!window._supabaseClient) {
     }
   });
 }
-var supabase = window._supabaseClient;
+// _client é usado internamente no auth.js — NÃO sobrescreve window.supabase
+const _client = window._supabaseClient;
 
 // ------------------------------------------------------------
 // ESTADO GLOBAL DO USUÁRIO
@@ -51,7 +53,7 @@ function getUserNome()       { return _currentProfile?.nome  ?? 'Usuário'; }
 // Redireciona para login.html se não houver sessão ativa.
 // ------------------------------------------------------------
 async function requireAuth() {
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const { data: { session }, error } = await _client.auth.getSession();
 
   if (error || !session) {
     window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
@@ -65,7 +67,7 @@ async function requireAuth() {
 
 // Carrega o perfil do banco e preenche _currentProfile
 async function _loadProfile(userId) {
-  const { data, error } = await supabase
+  const { data, error } = await _client
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -85,7 +87,7 @@ async function _loadProfile(userId) {
 async function loginWithEmail(email, password) {
   showLoading(true);
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await _client.auth.signInWithPassword({ email, password });
 
   showLoading(false);
 
@@ -109,7 +111,7 @@ async function loginWithEmail(email, password) {
 async function loginWithGoogle() {
   showLoading(true);
 
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { error } = await _client.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + '/callback.html'
@@ -131,7 +133,7 @@ async function loginWithGoogle() {
 async function registerUser(email, password, metadata = {}) {
   showLoading(true);
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await _client.auth.signUp({
     email,
     password,
     options: {
@@ -163,7 +165,7 @@ async function registerUser(email, password, metadata = {}) {
 // LOGOUT
 // ------------------------------------------------------------
 async function logout() {
-  await supabase.auth.signOut();
+  await _client.auth.signOut();
   _currentUser    = null;
   _currentProfile = null;
   window.location.href = '/login.html';
@@ -176,7 +178,7 @@ async function logout() {
 async function resetPassword(email) {
   showLoading(true);
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await _client.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/pages/reset-password.html'
   });
 
@@ -195,7 +197,7 @@ async function resetPassword(email) {
 // LISTENER DE MUDANÇA DE SESSÃO
 // Reage a login, logout e refresh de token automaticamente.
 // ------------------------------------------------------------
-supabase.auth.onAuthStateChange(async (event, session) => {
+_client.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
     _currentUser = session.user;
     await _loadProfile(session.user.id);
