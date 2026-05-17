@@ -1143,20 +1143,25 @@
 
   // ── Supabase Realtime ──────────────────────────────────────
   function inscreverRealtime() {
-    realtimeChannel = supabase
-      .channel('motorista-fretes')
-      .on('postgres_changes', {
-        event:  'INSERT',
-        schema: 'public',
-        table:  'fretes',
-        filter: `status=eq.pendente`
-      }, () => {
-        // Novo frete pendente → atualiza lista
-        const sec = document.getElementById('sec-disponiveis');
-        if (sec.classList.contains('active')) carregarDisponiveis();
-        else showToast('Novo frete disponível! 🚚', 'info');
-      })
-      .subscribe();
+    try {
+      const client = window._supabaseClient;
+      if (!client?.channel) return; // client não disponível
+      realtimeChannel = client
+        .channel('motorista-fretes')
+        .on('postgres_changes', {
+          event:  'INSERT',
+          schema: 'public',
+          table:  'fretes',
+          filter: `status=eq.pendente`
+        }, () => {
+          const sec = document.getElementById('sec-disponiveis');
+          if (sec.classList.contains('active')) carregarDisponiveis();
+          else showToast('Novo frete disponível! 🚚', 'info');
+        })
+        .subscribe();
+    } catch(e) {
+      console.warn('[Realtime] Não disponível:', e.message);
+    }
   }
 
   // ── Toast (reexportado para este contexto) ─────────────────
