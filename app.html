@@ -1041,15 +1041,18 @@ if (formNovoEnvio) {
       email,
       numero_contato,
       empresa,
-      tipo,
+      tipo:           tipo?.toLowerCase(),           // banco exige minúsculo: 'envio'|'coleta'
       tipo_veiculo,
       urgencia,
+      urgente:        urgencia === 'Sim',             // campo boolean do novo schema
       data_coleta,
       horario_janela,
       endereco,
+      link_maps:      endereco?.startsWith('http') ? endereco : null,
       observacao,
-      status: 'pendente',
-      solicitante_id: currentUser.id
+      status:         'pendente',
+      solicitante_id: currentUser.id,
+      solicitante_nome: userProfile?.nome || userProfile?.name || solicitante
     };
     
     // Desabilitar botão e mostrar loading
@@ -1069,12 +1072,10 @@ if (formNovoEnvio) {
       
       if (error) {
         console.error('Erro do Supabase:', error);
-        throw new Error(error.message || 'Erro ao criar solicitação');
+        throw new Error(`[${error.code}] ${error.message}`);
       }
       
       console.log('Solicitação criada:', data);
-      
-      // Sucesso!
       alert('✅ Solicitação criada com sucesso!');
       e.target.reset();
       mudarAba('dashboard');
