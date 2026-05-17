@@ -488,6 +488,30 @@
   // MOTORISTA.JS — lógica do portal do motorista
   // ============================================================
 
+  // ── Helpers de sessão via localStorage (não depende do auth.js que pode travar) ──
+  const _SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+  const _SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+
+  function _getSession() {
+    try { const s = localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s ? JSON.parse(s) : null; } catch { return null; }
+  }
+  function _getTok() { return _getSession()?.access_token || _SKEY; }
+  function _getHdr(extra={}) { return { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _getTok(), 'Content-Type': 'application/json', ...extra }; }
+  async function _sbGet(path) { const r = await fetch(_SURL + path, { headers: _getHdr() }); return r.ok ? await r.json() : []; }
+  async function _sbPatch(path, body) { const r = await fetch(_SURL + path, { method: 'PATCH', headers: _getHdr({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) }); return { ok: r.ok, data: r.ok ? await r.json() : null }; }
+  async function _sbPost(path, body) { const r = await fetch(_SURL + path, { method: 'POST', headers: _getHdr({ 'Prefer': 'return=representation' }), body: JSON.stringify(body) }); return { ok: r.ok, data: r.ok ? await r.json() : null }; }
+
+  // Perfil atual — lido do localStorage + Supabase
+  let _cachedProfile = null;
+  async function _getPerfil() {
+    if (_cachedProfile) return _cachedProfile;
+    const sess = _getSession();
+    if (!sess?.user?.id) return null;
+    const rows = await _sbGet(`/rest/v1/profiles?id=eq.${sess.user.id}&select=*&limit=1`);
+    _cachedProfile = Array.isArray(rows) && rows[0] ? rows[0] : { id: sess.user.id, nome: sess.user.email, nivel: 4 };
+    return _cachedProfile;
+  }
+
   // ── Estado global ──────────────────────────────────────────
   let freteAtivo       = null;   // frete aceito/em andamento
   let mapa             = null;   // instância Leaflet
@@ -503,11 +527,11 @@
     // Protege a rota: só motoristas (nivel=4)
     await requireNivel(4);
 
-    const perfil = getCurrentProfile();
-    if (!perfil) return;
+    const perfil = await _getPerfil();
+    if (!perfil) { window.location.href = '/login.html'; return; }
 
     // Preenche UI do usuário
-    const iniciais = (perfil.nome || 'MT').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+
     document.getElementById('avatarBtn').textContent      = iniciais;
     document.getElementById('perfilAvatar').textContent   = iniciais;
     document.getElementById('perfilNome').textContent     = perfil.nome || '—';
@@ -543,15 +567,7 @@
         <p class="text-slate-500 text-sm">Buscando fretes...</p>
       </div>`;
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const data = await _get("/rest/v1/fretes?status=eq.pendente&order=urgente.desc,data_coleta.asc,criado_em.asc&select=*");
+    const data = await _sbGet("/rest/v1/fretes?status=eq.pendente&order=urgente.desc,data_coleta.asc,criado_em.asc&select=*");
     const error = null;
     if (!Array.isArray(data)) { showToast('Erro ao buscar fretes', 'error'); return; }
 
@@ -617,17 +633,10 @@
   // ── Aceitar frete ──────────────────────────────────────────
   async function aceitarFrete(freteId) {
     showLoading(true);
-    const perfil = getCurrentProfile();
+    const perfil = await _getPerfil();
+    if (!perfil) { showLoading(false); showToast('Erro: sessão inválida', 'error'); return; }
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const {ok:ok2,error:err2} = await _patch(`/rest/v1/fretes?id=eq.${freteId}&status=eq.pendente`,{status:'aceito',motorista_id:perfil.id,motorista_nome:perfil.nome,aceito_em:new Date().toISOString()});
+    const {ok:ok2} = await _sbPatch(`/rest/v1/fretes?id=eq.${freteId}&status=eq.pendente`,{status:'aceito',motorista_id:perfil.id,motorista_nome:perfil.nome,aceito_em:new Date().toISOString()});
     showLoading(false);
     if(!ok2){showToast('Frete já foi aceito por outro motorista','error');carregarDisponiveis();return;}
 
@@ -638,16 +647,9 @@
 
   // ── Frete ativo ────────────────────────────────────────────
   async function carregarFreteAtivo() {
-    const perfil = getCurrentProfile();
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const rows3 = await _get(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=in.(aceito,em_andamento)&select=*&limit=1`);
+    const perfil = await _getPerfil();
+    if(!perfil){return;}
+    const rows3 = await _sbGet(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=in.(aceito,em_andamento)&select=*&limit=1`);
     const data = Array.isArray(rows3) && rows3.length > 0 ? rows3[0] : null;
     if (!data) {
       freteAtivo = null;
@@ -722,16 +724,9 @@
     if (!freteAtivo) return;
     showLoading(true);
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const perfIni = getCurrentProfile();
-    const {ok:okI} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfIni.id}`,{status:'em_andamento',iniciado_em:new Date().toISOString()});
+    const perfIni = await _getPerfil();
+    if(!perfIni){showLoading(false);return;}
+    const {ok:okI} = await _sbPatch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfIni.id}`,{status:'em_andamento',iniciado_em:new Date().toISOString()});
     showLoading(false);
     if(!okI){showToast('Erro ao iniciar frete','error');return;}
 
@@ -745,16 +740,9 @@
     if (!confirm('Confirmar conclusão do frete?')) return;
     showLoading(true);
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const perfCon = getCurrentProfile();
-    const {ok:okC} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCon.id}`,{status:'concluido',concluido_em:new Date().toISOString()});
+    const perfCon = await _getPerfil();
+    if(!perfCon){showLoading(false);return;}
+    const {ok:okC} = await _sbPatch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCon.id}`,{status:'concluido',concluido_em:new Date().toISOString()});
     showLoading(false);
     if(!okC){showToast('Erro ao concluir frete','error');return;}
 
@@ -772,16 +760,9 @@
     if (!freteAtivo) return;
     if (!confirm('Cancelar o aceite deste frete?')) return;
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const perfCan = getCurrentProfile();
-    const {ok:okCan} = await _patch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCan.id}`,{status:'pendente',motorista_id:null,motorista_nome:null,aceito_em:null});
+    const perfCan = await _getPerfil();
+    if(!perfCan){return;}
+    const {ok:okCan} = await _sbPatch(`/rest/v1/fretes?id=eq.${freteAtivo.id}&motorista_id=eq.${perfCan.id}`,{status:'pendente',motorista_id:null,motorista_nome:null,aceito_em:null});
     if(!okCan){showToast('Erro ao cancelar aceite','error');return;}
 
     freteAtivo = null;
@@ -856,15 +837,7 @@
 
       atualizarMapa(latitude, longitude);
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-      await _post('/rest/v1/rastreio',{frete_id:freteAtivo.id,motorista_id:getCurrentProfile().id,latitude,longitude,precisao_m:accuracy?Math.round(accuracy):null,velocidade:speed?Math.round(speed*3.6):null,rumo:heading||null});
+      await _sbPost('/rest/v1/rastreio',{frete_id:freteAtivo.id,motorista_id:(await _getPerfil())?.id,latitude,longitude,precisao_m:accuracy?Math.round(accuracy):null,velocidade:speed?Math.round(speed*3.6):null,rumo:heading||null});
     }, (err) => {
       console.warn('[Rastreio] GPS indisponível:', err.message);
       document.getElementById('statusDot').style.background = '#f59e0b';
@@ -874,16 +847,9 @@
 
   // ── Histórico ──────────────────────────────────────────────
   async function carregarHistorico() {
-    const perfil = getCurrentProfile();
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const data = await _get(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=eq.concluido&order=concluido_em.desc&limit=50&select=*`);
+    const perfil = await _getPerfil();
+    if(!perfil){return;}
+    const data = await _sbGet(`/rest/v1/fretes?motorista_id=eq.${perfil.id}&status=eq.concluido&order=concluido_em.desc&limit=50&select=*`);
 
     document.getElementById('statTotal').textContent = data?.length ?? 0;
 
@@ -917,33 +883,19 @@
   async function salvarPerfil() {
     const placa   = document.getElementById('inputPlaca').value.trim();
     const veiculo = document.getElementById('selectVeiculo').value;
-    const perfil  = getCurrentProfile();
+    const perfil  = await _getPerfil();
+    if(!perfil){showToast("Erro: sessão inválida","error");return;}
 
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    const {ok:okP} = await _patch(`/rest/v1/profiles?id=eq.${perfil.id}`,{veiculo_placa:placa,veiculo_tipo:veiculo});
+    const {ok:okP} = await _sbPatch(`/rest/v1/profiles?id=eq.${perfil.id}`,{veiculo_placa:placa,veiculo_tipo:veiculo});
     if(!okP){showToast('Erro ao salvar','error');return;}
     showToast('Perfil salvo!', 'success');
   }
 
   async function toggleDisponibilidade() {
     disponivel = !disponivel;
-    const perfil = getCurrentProfile();
-
-  const SURL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-  function _tok() { try { const s=localStorage.getItem('sb-mytiqqfsmglzmqxfnerc-auth-token'); return s?JSON.parse(s)?.access_token||SKEY:SKEY; } catch{return SKEY;} }
-  function _hdr(extra={}) { return {'apikey':SKEY,'Authorization':'Bearer '+_tok(),'Content-Type':'application/json',...extra}; }
-  async function _get(path) { const r=await fetch(SURL+path,{headers:_hdr()}); return r.ok?await r.json():[]; }
-  async function _patch(path,body) { const r=await fetch(SURL+path,{method:'PATCH',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-  async function _post(path,body) { const r=await fetch(SURL+path,{method:'POST',headers:_hdr({'Prefer':'return=representation'}),body:JSON.stringify(body)}); return {ok:r.ok,data:r.ok?await r.json():null,error:r.ok?null:await r.json()}; }
-    await _patch(`/rest/v1/profiles?id=eq.${perfil.id}`,{disponivel});
+    const perfil = await _getPerfil();
+    if(!perfil){return;}
+    await _sbPatch(`/rest/v1/profiles?id=eq.${perfil.id}`,{disponivel});
     atualizarToggleDisponivel();
     showToast(disponivel ? 'Você está disponível' : 'Você está indisponível', disponivel ? 'success' : 'warning');
   }
