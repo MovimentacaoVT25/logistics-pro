@@ -1,50 +1,52 @@
 // ============================================================
 // LOGISTICS PRO — Módulo de Permissões
-// Arquivo: js/permissions.js
-// Versão: 2.0.0 — Motoristas nativos (nivel=4)
+// Versão: 3.0.0
 // ============================================================
 // Níveis:
-//   0 = Visualizador  → só lê, não age
-//   1 = Solicitante   → abre chamados, cancela os seus
-//   2 = Gestor        → gestão de chamados e equipe
-//   3 = Admin         → tudo + configurações de acesso
-//   4 = Motorista     → vê chamados disponíveis, aceita, executa
+//   1 = Visualizador  → só lê demandas, não interage
+//   2 = Solicitante   → cria e cancela suas próprias solicitações
+//   3 = Gestor        → vê tudo, acompanha em tempo real, insights
+//   4 = Motorista     → aceita e executa fretes, pode resetar
+//   5 = Admin         → acesso total
 // ============================================================
 
 const PERMISSIONS = {
 
+  // ── Visualização ──────────────────────────────────────────
+  verDemandas:        (n) => n >= 1 && n !== 4,
+  verTodosOsChamados: (n) => n >= 1 && n !== 4,
+  verAnalytics:       (n) => n >= 3 && n !== 4,
+  verAcompanhamento:  (n) => n === 3 || n === 5,
+  verInsights:        (n) => n === 3 || n === 5,
+
   // ── Chamados ──────────────────────────────────────────────
-  abrirChamado:       (nivel) => nivel >= 1 && nivel !== 4,
-  cancelarProprio:    (nivel) => nivel >= 1 && nivel !== 4,
-  cancelarQualquer:   (nivel) => nivel === 2 || nivel === 3,
-  alterarStatus:      (nivel) => nivel === 2 || nivel === 3,
+  abrirChamado:       (n) => n === 2 || n === 5,
+  cancelarProprio:    (n) => n === 2 || n === 5,
+  cancelarQualquer:   (n) => n === 3 || n === 5,
+  alterarStatus:      (n) => n === 3 || n === 5,
+  exportarDados:      (n) => n === 3 || n === 5,
 
   // ── Motorista ─────────────────────────────────────────────
-  verFretesDisponiveis: (nivel) => nivel === 4,
-  aceitarFrete:         (nivel) => nivel === 4,
-  executarFrete:        (nivel) => nivel === 4,
-  enviarRastreio:       (nivel) => nivel === 4,
-
-  // ── Dados & Analytics ─────────────────────────────────────
-  verAnalytics:       (nivel) => nivel >= 0 && nivel !== 4,
-  exportarDados:      (nivel) => nivel === 2 || nivel === 3,
+  verFretesDisponiveis: (n) => n === 4,
+  aceitarFrete:         (n) => n === 4,
+  executarFrete:        (n) => n === 4,
+  resetarFrete:         (n) => n === 4,   // volta frete a pendente
+  enviarRastreio:       (n) => n === 4,
 
   // ── Administração ─────────────────────────────────────────
-  verGestaoUsuarios:   (nivel) => nivel === 3,
-  alterarNivelUsuario: (nivel) => nivel === 3,
-  verConfiguracoes:    (nivel) => nivel === 3,
-  editarConfiguracoes: (nivel) => nivel === 3,
-  deletarChamado:      (nivel) => nivel === 3,
-  verTodosOsChamados:  (nivel) => nivel >= 0 && nivel !== 4,
+  verGestaoUsuarios:   (n) => n === 5,
+  alterarNivelUsuario: (n) => n === 5,
+  verConfiguracoes:    (n) => n === 5,
+  editarConfiguracoes: (n) => n === 5,
+  deletarChamado:      (n) => n === 5,
 };
 
-// Rota correta para cada nível após login
 const ROTAS_POR_NIVEL = {
-  0: '/app.html',
   1: '/app.html',
   2: '/app.html',
   3: '/app.html',
   4: '/motorista.html',
+  5: '/app.html',
 };
 
 function getRotaParaNivel(nivel) {
@@ -64,34 +66,34 @@ function aplicarPermissoesUI() {
   const nivel = getUserNivel();
   document.querySelectorAll('[data-permissao]').forEach(el => {
     const acao = el.getAttribute('data-permissao');
-    const temPermissao = PERMISSIONS[acao] ? PERMISSIONS[acao](nivel) : false;
-    el.style.display = temPermissao ? '' : 'none';
-    if (temPermissao) el.removeAttribute('disabled');
+    const ok = PERMISSIONS[acao] ? PERMISSIONS[acao](nivel) : false;
+    el.style.display = ok ? '' : 'none';
+    if (ok) el.removeAttribute('disabled');
   });
   document.body.setAttribute('data-nivel', nivel);
   document.body.setAttribute('data-nivel-nome', getNomesNivel(nivel));
 }
 
 const _nomesNivel = {
-  0: 'Visualizador',
-  1: 'Solicitante',
-  2: 'Gestor',
-  3: 'Admin',
+  1: 'Visualizador',
+  2: 'Solicitante',
+  3: 'Gestor',
   4: 'Motorista',
+  5: 'Admin',
 };
 
 const _coresNivel = {
-  0: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  1: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  2: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
-  3: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  1: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+  2: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  3: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
   4: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  5: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
 function getNomesNivel(nivel) { return _nomesNivel[nivel] ?? 'Desconhecido'; }
 
 function getBadgeNivel(nivel) {
-  const cor  = _coresNivel[nivel] ?? _coresNivel[0];
+  const cor  = _coresNivel[nivel] ?? _coresNivel[1];
   const nome = _nomesNivel[nivel] ?? 'N/A';
   return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cor}">${nome}</span>`;
 }
