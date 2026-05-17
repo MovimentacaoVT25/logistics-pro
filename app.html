@@ -591,18 +591,24 @@ let userProfile = null;
 let allFretes = [];
 
 // ==================== AUTENTICAÇÃO ====================
+// Pega sessão direto do localStorage — não depende do cliente JS que pode travar
+function _getSessionFromStorage() {
+  try {
+    const key = 'sb-mytiqqfsmglzmqxfnerc-auth-token';
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 async function checkAuth() {
   try {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    if (error) throw error;
-    
-    if (!session) {
+    const session = _getSessionFromStorage();
+    if (!session || !session.access_token) {
       window.location.href = '/login.html';
       return false;
     }
-    
     currentUser = session.user;
-    await loadUserProfile();
+    await loadUserProfile(session.access_token);
     return true;
   } catch (error) {
     console.error('Erro ao verificar autenticação:', error);
@@ -611,21 +617,20 @@ async function checkAuth() {
   }
 }
 
-async function loadUserProfile() {
+async function loadUserProfile(token) {
   try {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
-      console.error('Erro ao carregar perfil:', error);
-    }
-    
+    const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
+    const tok = token || _getSessionFromStorage()?.access_token || SUPA_KEY;
+
+    const resp = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${currentUser.id}&select=*&limit=1`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${tok}` }
+    });
+    const rows = resp.ok ? await resp.json() : [];
+    const data = rows[0] || null;
+
     userProfile = data || { nivel: 1, nome: currentUser.email.split('@')[0] };
-    
-    // Atualizar UI
+
     const name = userProfile.nome || userProfile.name || currentUser.email.split('@')[0];
     document.getElementById('userName').textContent = name;
     document.getElementById('userEmail').textContent = getNivelLabel(userProfile.nivel || 1);
@@ -707,8 +712,7 @@ async function carregarDados() {
     // Usa fetch direto para evitar conflito do cliente JS
     const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
-    const sessR = await supabaseClient.auth.getSession();
-    const tok = sessR.data.session?.access_token || SUPA_KEY;
+    const tok = _getSessionFromStorage()?.access_token || SUPA_KEY;
 
     const fretesResp = await fetch(`${SUPA_URL}/rest/v1/fretes?select=*&order=created_at.desc`, {
       headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${tok}` }
@@ -1001,15 +1005,15 @@ if (formNovoEnvio) {
   formNovoEnvio.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Validar autenticação — re-buscar sessão se necessário
+    // Validar autenticação — pega sessão do localStorage
     if (!currentUser) {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
+      const sess = _getSessionFromStorage();
+      if (!sess?.user) {
         alert('Você precisa estar logado para criar solicitações');
         window.location.href = '/login.html';
         return;
       }
-      currentUser = session.user;
+      currentUser = sess.user;
     }
     
     // Coletar dados do formulário
@@ -1069,8 +1073,7 @@ if (formNovoEnvio) {
       const SUPA_URL = 'https://mytiqqfsmglzmqxfnerc.supabase.co';
       const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dGlxcWZzbWdsem1xeGZuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTA4MDksImV4cCI6MjA5MDIyNjgwOX0.RYZI6J3KcyAPsfFzczsbpod-mWvslJIXLIKVUAl4TII';
       
-      const sessResp = await supabaseClient.auth.getSession();
-      const token = sessResp.data.session?.access_token || SUPA_KEY;
+      const token = _getSessionFromStorage()?.access_token || SUPA_KEY;
 
       const resp = await fetch(`${SUPA_URL}/rest/v1/fretes`, {
         method: 'POST',
